@@ -138,6 +138,7 @@ router.get('/inferences', function(req, res) {
       inferences = i.inferences_list
       res.send(i.inferences_list)
       inferences.map( (i) =>  {
+        // setTimeout(function(){ processInferences(i); }, 1000);
         processInferences(i) // store result in an object, reference by id
       })
     })
@@ -150,6 +151,7 @@ router.get('/inferences', function(req, res) {
 // var countObjects = function( ) {
 //
 // }
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0
 var inferenceData = {} // object to keep inference analytics
 var processInferences = function(i) {
   // var infDetails = JSON.parse(fs.readFileSync('../inference.json').toString())
@@ -163,20 +165,64 @@ var processInferences = function(i) {
     }
   }
   // request inference detections
+  console.log("calling url")
+  console.log(url + "/api/inferences/" + i['_id'])
   fetch( url + "/api/inferences/" + i['_id'], options ).then ( (r) => {
     // result = r
-    // console.log(r)
+    console.log("r")
+    console.log(JSON.stringify(r))
+    console.log("r.status")
+    console.log(r.status)
     r.json().then( (det) => {
       console.log("detections received")
-      // console.log(d)
+      console.log(det._id)
       var d = det.classified
-      var framesPerSecond = 60
-      var reducedFrames = d.filter(e => (e.frame_number % framesPerSecond == 0) )
-      console.log(reducedFrames)
+      var totalFrames = det.total_frames
+      var times = det.classified.map(f => f.time_offset)
+      var totalTime = (Math.max(...times) * .001) // in seconds
+      var proFrames = det.processed_frames
+      // console.log("d")
+      // console.log(Object.keys(d))
+      console.log("totalFrames / totalTime")
+
+      console.log(totalFrames / totalTime)
+
+      console.log("totalTime")
+      console.log(totalTime)
+
+      console.log("totalFrames")
+      console.log(totalFrames)
+
+      console.log("proFrames")
+      console.log(proFrames)
+
+      console.log("totalFrames / (totalTime * (det.percent_complete))")
+      console.log(totalFrames / (totalTime * (det.percent_complete * .01)))
+
+      console.log("proFrames / (totalTime * (det.percent_complete))")
+      console.log(proFrames / (totalTime * (det.percent_complete * .01)))
+
+      console.log("det.percent_complete")
+      console.log(det['percent_complete'])
+
+      // var framesPerSecond = Math.round(proFrames / totalTime) // 60
+      var framesPerSecond = Math.round(proFrames / totalTime)
+      console.log("framesPerSecond")
+      console.log(framesPerSecond)
+
+      // console.log("times")
+      // console.log(times)
+      var reducedFrames = d.filter( e => e.frame_number % framesPerSecond == 0 )
+      console.log("reducedFrames.length")
+      console.log(reducedFrames.length)
+
+      console.log("d.length")
+      console.log(d.length)
       // get unique classes
       var labels = [...new Set(reducedFrames.map(e => e.label))]
       // get list of unique frame numbers
       var frameNumbers = [...new Set(reducedFrames.map(e => Number(e.frame_number)))].reverse()
+      console.log("frameNumbers")
       console.log(frameNumbers)
       // get total number of objects found
       var totalObjectCount = []

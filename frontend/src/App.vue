@@ -62,7 +62,8 @@
           <div> {{renderInferences.length}} results found </div>
           <template v-for="(inference, idx) in renderInferences">
             <!-- <md-card v-bind:inference="inference._id" v-on:click=setInference > -->
-            <md-card v-bind:inference="inference._id" @click.native="setInference(inference._id) ; getInferenceDetails() ; formatLine(inference._id) ; formatCircle(inference._id)" >
+
+            <md-card v-bind:inference="inference._id" @click.native="setInference(inference._id) ; formatLine(inference._id) ; formatCircle(inference._id)" >
               <!-- <h3>{{inference.sequence_number}}</h3> -->
               <!-- <md-card-title-text>
                 <md-headline
@@ -383,7 +384,8 @@
 
     },
     mounted(){
-      this.getInferenceDetails()
+      this.getInferenceDetails();
+      // this.getInferenceDetails()
       this.getModels()
       // TODO, remove this, get env vars working
       // this.$data.url = process.env.VUE_APP_URL,
@@ -669,7 +671,7 @@
         fetch("http://localhost:30000/inferences", options).then((response) => {
           response.json().then((json) => {
             // TODO filter is only here to ignore shared inferences
-            var inf = json.filter(i => i.model_id != '29dad520-4908-42fc-b118-9971b957bf8c')
+            var inf = json //.filter(i => i.model_id != '29dad520-4908-42fc-b118-9971b957bf8c')
             this.$data.inferences = inf; // json
             this.$data.renderInferences = inf //.filter(i => i.model_id == '3ac091c7-66ef-450a-8b7d-fa9e0cc748e6 	') // only need to do this initially
             console.log("inferences received")
@@ -728,11 +730,9 @@
       },
       formatLine(inferenceId) {
         console.log("generating line graph for " + inferenceId)
+        console.log(this.$data.inferenceDetails[inferenceId])
         var detections = this.$data.inferenceDetails[inferenceId]
         var objects = Object.keys(detections)
-        // var d = {
-        //   data: []
-        // }
         var d = []
         objects.map( (o) => {
           var x = Array.from(Array(detections[o].length).keys())

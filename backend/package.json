@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "async": "2.6.1",
+    "body-parser": "^1.19.0",
     "cookie-parser": "~1.4.3",
     "cors": "2.8.4",
     "debug": "~2.6.9",
@@ -16,6 +17,7 @@
     "express-http-proxy": "^1.6.0",
     "fabric-ca-client": "1.2.0",
     "fabric-client": "1.2.0",
+    "fluent-ffmpeg": "^2.1.2",
     "grpc": "1.11.0",
     "http-errors": "~1.6.2",
     "jade": "~1.11.0",

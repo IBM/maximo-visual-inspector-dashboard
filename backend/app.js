@@ -30,47 +30,43 @@ app.use(function(req, res, next) {
   next();
 });
 
-// var bodyParser = require('body-parser')
+const bodyParser = require('body-parser')
+app.use(bodyParser.json());
 // bodyParser.raw({ type: 'application/vnd.custom-type' })
 
 app.use('/proxyget', function(req, res) {
-  var paiv_url = url + req.url;
-  console.log("sending proxy get request to " + paiv_url)
+  console.log(req)
   const headers = req.headers
   console.log("headers")
   console.log(headers)
+  var url = headers['x-proxy-url']
+  var paiv_url = url + req.url;
+  console.log("sending proxy get request to " + paiv_url)
   const options = {
     url: paiv_url,
     headers: headers
   }
   console.log("options")
   console.log(options)
-  require('request').get(options).pipe(res)
+  require('request').get(options).on('error', function(err) {
+    console.error(err)
+  }).pipe(res)
 });
 
 // app.use(bodyParser.raw({ type: 'application/vnd.custom-type' }));
 
 
-// var storage = multer.memoryStorage()
-// var upload = multer({ storage: storage })
 
-// const eformData = require("express-form-data");
-// app.use(express.static(__dirname + '../public'));
 app.set('views', path.join(__dirname, ''));
 app.use(require("express-form-data").parse())
 // app.use(formData.stream())
 app.use('/proxypost', function(req, res) {
   // console.log(upload)
   // console.log(req)
+  console.log("req.headers")
+  console.log(req.headers)
+  var url = headers['x-proxy-url']
   var paiv_url = url + req.url;
-  // console.log(paiv_url)
-  // console.log("req")
-  // console.log(req)
-  // console.log(Object.keys(req))
-  // console.log("req.body")
-  // console.log(req.body)
-  // console.log("req.files")
-  // console.log()
   // console.log(fs.createReadStream(req.files['files']['path']))
   // console.log(req.files)
   var filePath = req.files['blob']['path']
@@ -91,10 +87,21 @@ app.use('/proxypost', function(req, res) {
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-var url = process.env.url
-console.log("url")
-console.log(url)
-app.use('/proxy', proxy(url));
+// var url = process.env.url
+// console.log("url")
+// console.log(url)
+// app.use('/proxy', proxy(url));
+
+// app.use('/token', function(req, res) {
+//   var url = req.url
+//   console.log(url)
+//   console.log(req)
+//   console.log(`setting up proxy for ${url}`)
+//   app.use('/proxy', proxy(url))
+// })
+
+
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

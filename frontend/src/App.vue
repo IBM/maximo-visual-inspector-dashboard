@@ -4,32 +4,32 @@
 <template>
   <div id="app">
 
-  <!-- <v-app id="app"> -->
+    <!-- <v-app id="app"> -->
 
-  <!-- <card>
+    <!-- <card>
     <img slot="img" src="url/uploads/user361@paiv.com/datasets/f0f33ff2-54ae-46bc-92e5-7d71f535477b/thumbnails/28c5d101-7031-4c34-ba68-6d486579cc29.jpg"></img>
     <span slot="title">The title</span>
     <p>The content</p>
     <span slot="revealTitle">The revealed title</span>
     <p slot="reveal">The revealed content</p>
   </card> -->
-  <div id="menu">
-    <!-- <vue-button type="default" v-on:click="showInvokeModal({'function': 'init_product_listing', 'fields': ['Product Listing Id', 'Supplier ID', 'Product ID'], 'title': 'Create Product Listing'})">Create Product Listing</vue-button>
+    <div id="menu">
+      <!-- <vue-button type="default" v-on:click="showInvokeModal({'function': 'init_product_listing', 'fields': ['Product Listing Id', 'Supplier ID', 'Product ID'], 'title': 'Create Product Listing'})">Create Product Listing</vue-button>
     <vue-button type="default" v-on:click="showInvokeModal({'function': 'init_product', 'fields': ['Product Id', 'Quantity', 'CountryId'], 'title': 'Create Product'})">Create Product</vue-button>
     <vue-button type="default" v-on:click="showInvokeModal({'function': 'init_user', 'fields': ['ID'], 'title': 'Create User'})">Create User</vue-button> -->
-    <div style="margin-top:10px">
-      <vue-button type="default" v-on:click="goHome">Home</vue-button>
-      <vue-button type="default" v-on:click="showModal({'name': 'upload-modal', 'title': 'Upload'})">Upload Image(s)</vue-button>
-      <vue-button type="default" v-on:click="showModal({'name': 'login-modal', 'fields': ['URL', 'Username', 'Password'], 'title': 'Login'})">Login</vue-button>
-      <vue-button type="default" v-on:click="downloadImages">Download Image(s)</vue-button>
+      <div style="margin-top:10px">
+        <vue-button type="default" v-on:click="goHome">Home</vue-button>
+        <vue-button type="default" v-on:click="showModal({'name': 'upload-modal', 'title': 'Upload'})">Upload Image(s)</vue-button>
+        <vue-button type="default" v-on:click="showModal({'name': 'login-modal', 'fields': ['URL', 'Username', 'Password'], 'title': 'Login'})">Login</vue-button>
+        <vue-button type="default" v-on:click="downloadImages">Download Image(s)</vue-button>
+      </div>
+
+
     </div>
+    </br>
 
 
-  </div>
-  </br>
-
-
-  <!-- <div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);"> -->
+    <!-- <div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);"> -->
 
     <!-- <div>
       <ul>
@@ -48,8 +48,7 @@
       <button v-show="!$refs.upload || !$refs.upload.active" @click.prevent="$refs.upload.active = true" type="button">Start upload</button>
       <button v-show="$refs.upload && $refs.upload.active" @click.prevent="$refs.upload.active = false" type="button">Stop upload</button>
     </div> -->
-
-    <template v-if="! (selectedInference && (selectedInference.length > 0))">
+    <template v-if="( (! selectedInference) || (selectedInference.length < 1))">
       <!-- hacky way to route, hide dashboard view and load detailed view -->
       <div>
         <md-field style="width:500px; margin: auto; ">
@@ -61,9 +60,9 @@
           <br>
           <div> {{renderInferences.length}} results found </div>
           <template v-for="(inference, idx) in renderInferences">
+            <!-- <md-ripple> -->
             <!-- <md-card v-bind:inference="inference._id" v-on:click=setInference > -->
-
-            <md-card v-bind:inference="inference._id" @click.native="setInference(inference._id) ; formatLine(inference._id) ; formatCircle(inference._id)" >
+            <md-card v-bind:inference="inference._id" @click.native="setInference(inference._id) ; formatLine(inference._id) ; formatCircle(inference._id)" md-with-hover>
               <!-- <h3>{{inference.sequence_number}}</h3> -->
               <!-- <md-card-title-text>
                 <md-headline
@@ -77,14 +76,13 @@
               </md-card-header>
 
               <md-card-media md-big>
-                <img :src="url + inference['thumbnail_path']" >
+                <img :src="url + inference['thumbnail_path']">
               </md-card-media>
 
               <md-card-content>
                 <!-- <template v-if="'processed_frames' in Object.keys(inference)"> -->
-                  <div class="md-subhead">{{inference['status']}}</div>
-                  <div class="md-subhead">Processed {{inference['processed_frames']}} of {{inference['total_frames']}} total Frames</div>
-                  <div class="md-subhead">{{inference['percent_complete']}} %</div>
+                <div class="md-subhead">{{inference['status']}}</div>
+                <div class="md-subhead">{{inference['percent_complete'].toFixed(2)}} %</div>
                 <!-- </template> -->
               </md-card-content>
 
@@ -95,7 +93,7 @@
 
 
                 <template v-if="inferenceDetails && (Object.keys(inferenceDetails).length > 0) && inferenceDetails[inference._id]">
-                  <div class="md-subhead">Classes</div>
+                  <div class="md-subhead">Detected Objects</div>
                   <div>{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div>
                 </template>
                 <!-- <div class="md-subhead">Classes: {{inferencedetailed['created_date']}}</div> -->
@@ -107,157 +105,169 @@
                 <md-button>Action</md-button>
               </md-card-actions> -->
             </md-card>
+            <!-- </md-ripple> -->
           </template>
         </template>
       </div>
-        </br>
-        <div>
-          <template v-if="inferences.length > 0">
-                    <!-- <md-card
+      </br>
+      <div>
+        <template v-if="inferences.length > 0">
+          <!-- <md-card
                       color="green"
                       title="Inferences"
                       text="Inferences"
                     > -->
-                    <!-- <md-table v-model="inferences">
+          <!-- <md-table v-model="inferences">
                             <md-table-row>
 
                             </md-table-row>
                     </md-table> -->
 
-                    <data-table :data=inferences  :items-per-page="5"  class="elevation-1">
-                    </data-table>
+          <data-table :data=inferences :items-per-page="5" class="elevation-1">
+          </data-table>
 
-                  <!-- </md-card> -->
-          </template>
+          <!-- </md-card> -->
+        </template>
 
-          <template v-if="models.length > 0">
-                  <data-table :data=models :style="{overflow: 'auto'}">
-                  <!-- <template slot="caption">Models</template> -->
-                  </data-table>
-          </template>
+        <template v-if="models.length > 0">
+          <data-table :data=models :style="{overflow: 'auto'}">
+            <!-- <template slot="caption">Models</template> -->
+          </data-table>
+        </template>
 
-          <!-- <template v-if="ledgerState.retailers">
+        <!-- <template v-if="ledgerState.retailers">
                   <data-table :data="ledgerState.retailers.map( s =>  ({ Id: s.Id, Products: s.products }) )" :style="{width: '300px', height: '200px', overflow: 'auto'}">
                       <template slot="caption">Retailers</template>
                   </data-table>
           </template> -->
 
-        </div>
+      </div>
 
-      </template>
-      <div>
+    </template>
+    <div>
 
-        <modal name="login-modal" height="auto" >
-          <h2 align="center"> {{title}} </h2>
-          <vue-form
-            id="chaincode-form"
-            :model="form">
-            <template v-for="(field, idx) in fields">
-              <vue-form-item style="width:500px;" align=center>
-                <vue-input
-                  :placeholder=field
-                  v-model=input[idx]>
-                </vue-input>
-              </vue-form-item>
-            </template>
-            <vue-form-item style="margin-left:100px">
-              <vue-button type="default" v-on:click="hideModal({'name': 'login-modal'})">Cancel</vue-button>
-              <vue-button type="success" v-on:click="login">Submit</vue-button>
+      <modal name="login-modal" height="auto">
+        <h2 align="center"> {{title}} </h2>
+        <vue-form id="chaincode-form" :model="form">
+          <template v-for="(field, idx) in fields">
+            <vue-form-item style="width:500px;" align=center>
+              <vue-input :placeholder=field v-model=input[idx]>
+              </vue-input>
             </vue-form-item>
-            </vue-form>
-        </modal>
+          </template>
+          <vue-form-item style="margin-left:100px">
+            <vue-button type="default" v-on:click="hideModal({'name': 'login-modal'})">Cancel</vue-button>
+            <vue-button type="success" v-on:click="login">Submit</vue-button>
+          </vue-form-item>
+        </vue-form>
+      </modal>
 
-        <modal name="upload-modal" height="auto" >
-          <h2 align="center"> Upload Files(s) </h2>
-          <div id="drop_zone" v-on:drop="dropHandler" v-on:dragover="dragOverHandler">
-            <p align="center">Drag and drop files here</p>
-            <template v-if="filenames.length > 0">
-              <li v-for="file in filenames">
-                  {{ file }}
-              </li>
-            </template>
+      <modal name="upload-modal" height="auto">
+        <h2 align="center"> Upload Files(s) </h2>
+        <div id="drop_zone" v-on:drop="dropHandler" v-on:dragover="dragOverHandler">
+          <p align="center">Drag and drop files here</p>
+          <template v-if="filenames.length > 0">
+            <li v-for="file in filenames">
+              {{ file }}
+            </li>
+          </template>
 
-            <!-- <v-select v-model="selectedModel" :options="models"></v-select> -->
-            <!-- <md-select v-model="selectedModel" name="selectedModel" id="selectedModel">
+          <!-- <v-select v-model="selectedModel" :options="models"></v-select> -->
+          <!-- <md-select v-model="selectedModel" name="selectedModel" id="selectedModel">
                 <template v-for="m in models">
                   {{m}}
                   <md-option value=m._id> {{m._id}} {{m._name}} </md-option>
                 </template>
             </md-select> -->
-          </div>
-          <div style="width: 100%; margin: 0 auto;">
-            <h3 align="center">Select Model</h3>
-            <div style="width: 100%; margin: 0 auto;">
-              <select id="selectedModel">
-                <template v-for="m in models">
-                 <!-- <option value="volvo">Volvo</option> -->
-                 <option :value=m._id> {{m.name}} ({{m._id}}) </option>
-               </template>
-              </select>
-            </div>
-          </div>
-          <div>
-            <vue-button type="default" v-on:click="hideModal({'name': 'upload-modal'})">Cancel</vue-button>
-            <vue-button type="default" v-on:click="submitInference() ; hideModal({'name': 'upload-modal'})">Upload</vue-button>
-          </div>
-        </modal>
-
-
-        <!-- </template> -->
-        <!-- </template> -->
         </div>
-
-      <template v-if="(selectedInference && (selectedInference.length > 0))">
-         <h2> Detailed View </h2>
-         <h3> {{selectedInference}} </h3>
-         <!-- <h3> {{inferences}} </h3> -->
-         <!-- <h3> {{inferenceDetails}} </h3> -->
-         <!-- <p>{{(inferences.filter( (i) => i._id == selectedInference))[0]}}</p> -->
-
-          <!-- <source :src="url/uploads/inferences/7afb7810-bdfa-4968-aafc-06a8bd758f5b/training_video_out.mp4" type="video/mp4"> -->
-
-          <template v-if="((inferences.filter( (i) => i._id == selectedInference))[0].video_out) && ((inferences.filter( (i) => i._id == selectedInference))[0].percent_complete == 100)">
-            <video id="videoContainer" ref="videoContainer" width="960" height="720" controls>
-              <source :src="url + (inferences.filter( (i) => i._id == selectedInference))[0].video_out"  type="video/mp4">
-            </video>
-          </template>
-          <template v-else-if="(inferences.filter( (i) => i._id == selectedInference))[0].video_in" >
-            <video id="videoContainer" ref="videoContainer" width="960" height="720"  controls>
-              <source :src="url + (inferences.filter( (i) => i._id == selectedInference))[0].video_in "  type="video/mp4">
-            </video>
-          </template>
-          <template v-else>
-            <img :src="url + (inferences.filter( (i) => i._id == selectedInference))[0]['thumbnail_path']" >
-          </template>
+        <div style="width: 100%; margin: 0 auto;">
+          <h3 align="center">Select Model</h3>
+          <div style="width: 100%; margin: 0 auto;">
+            <select id="selectedModel">
+              <template v-for="m in models">
+                <!-- <option value="volvo">Volvo</option> -->
+                <option :value=m._id> {{m.name}} ({{m._id}}) </option>
+              </template>
+            </select>
+          </div>
+        </div>
+        <div>
+          <vue-button type="default" v-on:click="hideModal({'name': 'upload-modal'})">Cancel</vue-button>
+          <vue-button type="default" v-on:click="submitInference() ; hideModal({'name': 'upload-modal'})">Upload</vue-button>
+        </div>
+      </modal>
 
 
-         <md-card style="width:80%">
-           {{lineGraphData}}
-           <Plotly id="detailedLineGraph" ref="detailedLineGraph" v-on:click="updateVideo" :data="lineGraphData" :layout=lineGraphLayout :display-mode-bar="false"></Plotly>
-         </md-card>
+      <!-- </template> -->
+      <!-- </template> -->
+    </div>
 
+    <template v-if="(selectedInference && (selectedInference.length > 0))">
+      <h2> Detailed View </h2>
+      <h3> {{selectedInference}} </h3>
+      <!-- <h3> {{inferences}} </h3> -->
+      <!-- <h3> {{inferenceDetails}} </h3> -->
+      <!-- <p>{{(inferences.filter( (i) => i._id == selectedInference))[0]}}</p> -->
 
-         <md-card style="width:50%">
-           <!-- <md-card-content> -->
-             {{circleGraphData}}
-             <Plotly id="detailedPieGraph" :data=circleGraphData :display-mode-bar="false"></Plotly>
-           <!-- </md-card-content> -->
-         </md-card>
+      <!-- <source :src="url/uploads/inferences/7afb7810-bdfa-4968-aafc-06a8bd758f5b/training_video_out.mp4" type="video/mp4"> -->
 
-         <md-card style="width:35%">
-           <md-card-header>
-             <md-card-header-text>
-               <div class="md-title">Placeholder</div>
-             </md-card-header-text>
-           </md-card-header>
-           <md-card-content>
-               <div class="md-subhead">Placeholder</div>
-           </md-card-content>
-         </md-card>
+      <template v-if="((inferences.filter( (i) => i._id == selectedInference))[0].video_out) && ((inferences.filter( (i) => i._id == selectedInference))[0].percent_complete == 100)">
+        <video id="videoContainer" ref="videoContainer" width="960" height="720" controls>
+          <source :src="url + (inferences.filter( (i) => i._id == selectedInference))[0].video_out" type="video/mp4">
+        </video>
+      </template>
+      <template v-else-if="(inferences.filter( (i) => i._id == selectedInference))[0].video_in">
+        <video id="videoContainer" ref="videoContainer" width="960" height="720" controls>
+          <source :src="url + (inferences.filter( (i) => i._id == selectedInference))[0].video_in " type="video/mp4">
+        </video>
+      </template>
+      <template v-else>
+        <img :src="url + (inferences.filter( (i) => i._id == selectedInference))[0]['thumbnail_path']">
       </template>
 
-<!--  TODO, this is being hidden by datatables since it's fixed -->
-<!-- <div v-if="!isHidden" style="z-index:9000">
+
+      <md-card style="width:80%">
+        <!-- {{lineGraphData}} -->
+        <Plotly id="detailedLineGraph" ref="detailedLineGraph" v-on:click="updateVideo" :data="lineGraphData" :layout=lineGraphLayout :display-mode-bar="false"></Plotly>
+      </md-card>
+
+
+      <md-card style="width:50%">
+        <!-- <md-card-content> -->
+        <!-- {{circleGraphData}} -->
+        <Plotly id="detailedPieGraph" :data=circleGraphData :display-mode-bar="false"></Plotly>
+        <!-- </md-card-content> -->
+      </md-card>
+
+      <md-card style="width:35%">
+        <md-card-header>
+          <md-card-header-text>
+            <div class="md-title">Inference data</div>
+          </md-card-header-text>
+        </md-card-header>
+        <!-- <md-card-content>
+          <div class="md-subhead">Placeholder</div>
+        </md-card-content> -->
+        <md-card-content>
+
+          <template v-if="inferenceDetails && (Object.keys(inferenceDetails).length > 0) && inferenceDetails[inference._id]">
+            <div class="md-subhead">Detected Objects</div>
+            <div>{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div>
+          </template>
+
+          <div class="md-subhead">{{(inferences.filter( (i) => i._id == selectedInference))[0]['status']}} {{(inferences.filter( (i) => i._id == selectedInference))[0]['percent_complete'].toFixed(2)}} %</div>
+          <div class="md-subhead">Model: {{(inferences.filter( (i) => i._id == selectedInference))[0]['model_id']}}</div>
+          <div class="md-subhead">{{(inferences.filter( (i) => i._id == selectedInference))[0]['created_date']}}</div>
+
+          <!-- <div> Object visible in n of x frames </div>
+          <div> Object visible in n of x frames </div> -->
+        </md-card-content>
+
+      </md-card>
+    </template>
+
+    <!--  TODO, this is being hidden by datatables since it's fixed -->
+    <!-- <div v-if="!isHidden" style="z-index:9000">
       <vue-form
         id="chaincode-form"
         :model="form"
@@ -284,14 +294,14 @@
         </vue-form-item>
       </vue-form>
     </div> -->
-<!-- <vue-form-item> item 1 </vue-form-item>
+    <!-- <vue-form-item> item 1 </vue-form-item>
       <vue-form-item> item 2 </vue-form-item> -->
-<!-- <vue-input placeholder="Please input"></vue-input>
+    <!-- <vue-input placeholder="Please input"></vue-input>
       <vue-input placeholder="Please input"></vue-input> -->
 
 
-<!-- </v-app> -->
-</div>
+    <!-- </v-app> -->
+  </div>
 
 
 </template>
@@ -340,6 +350,7 @@
         inference_data: {},
         fields: [],
         query: '',
+        token: (localStorage['token'] || ''),
         // user_fields: [],
         // user_type: '',
         // user_input: [],
@@ -351,13 +362,27 @@
         models: [],
         files: [],
         filenames: [],
+        inference: {},
         inferenceDetails: {},
         lineGraphData: [],
         circleGraphData: [],
         url: (localStorage['paiv_url'] || process.env.VUE_APP_URL),
         username: (localStorage['paiv_user'] || process.env.VUE_APP_USER),
         password: (localStorage['paiv_password'] || process.env.VUE_APP_PASSWORD),
-        lineGraphLayout: {title: 'Objects Time Series',xaxis: {title: 'Time',showgrid: false,zeroline: false},yaxis: {title: 'Objects',showline: false}}
+        lineGraphLayout: {
+          title: 'Objects Time Series',
+          xaxis: {
+            title: 'Seconds',
+            showgrid: false,
+            zeroline: false,
+            tickmode: 'linear'
+          },
+          yaxis: {
+            title: 'Objects',
+            showline: false,
+            dtick: 1
+          }
+        }
 
       }
     },
@@ -368,22 +393,22 @@
       [Input.name]: Input,
       [Button.name]: Button
     },
-    beforeMount(){
+    beforeMount() {
 
-       // this.$data.selectedInference = "foobar"
-       this.getInferences()
-       // if (localStorage.getItem('token')) {
-       //   this.$data.token = localStorage.getItem('token')
-       // } else {
-       //   this.login()
-       // }
-       this.login()
-       this.$data.url = process.env.VUE_APP_URL,
-       this.$data.username = process.env.VUE_APP_USER,
-       this.$data.password = process.env.VUE_APP_PASSWORD
+      // this.$data.selectedInference = "foobar"
+      this.getInferences()
+      // if (localStorage.getItem('token')) {
+      //   this.$data.token = localStorage.getItem('token')
+      // } else {
+      //   this.login()
+      // }
+      // this.login()
+      // this.$data.url = process.env.VUE_APP_URL,
+      // this.$data.username = process.env.VUE_APP_USER,
+      // this.$data.password = process.env.VUE_APP_PASSWORD
 
     },
-    mounted(){
+    mounted() {
       this.getInferenceDetails();
       // this.getInferenceDetails()
       this.getModels()
@@ -395,48 +420,55 @@
       // console.log("process.env")
       // console.log(process.env)
       // this.getInferences()
-
-      // this.$router.push('/inference/foo')
     },
     methods: {
       dragOverHandler(ev) {
-         console.log('File(s) in drop zone');
-         ev.preventDefault();
+        console.log('File(s) in drop zone');
+        ev.preventDefault();
+      },
+      selectInference(id){
+        return (inferences.filter( (i) => i._id == id))[0]
       },
       getModels() {
         var options = {
           method: "GET",
           headers: {
             "X-Auth-Token": this.$data.token,
+            "X-Proxy-URL": this.$data.url
           }
         }
         console.log("getting models")
         console.log(options)
         // fetch(this.$data.url + "/trained-models", options).then((res) => {
+        // proxy needed for cors
         fetch('http://localhost:30000/proxyget' + "/api/trained-models", options).then((res) => {
           console.log("models received")
-          console.log(res)
+          // console.log(res)
           res.json().then((models) => {
             this.$data.models = models
             console.log(models)
           })
         })
       },
-      parseDate(d){
+      parseDate(d) {
         var dateObj = (new Date(Date.parse(d)))
         // var r = date.getMonth() + date.getDay() + date.getYear()
         var date = `${dateObj.getMonth()}/${dateObj.getDay()}/${dateObj.getFullYear()}`
-        var time = dateObj.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+        var time = dateObj.toLocaleString('en-US', {
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true
+        })
         return `${date} ${time}`
       },
-      forceFileDownload(response){
-           const url = window.URL.createObjectURL(new Blob([response.data]))
-           const link = document.createElement('a')
-           link.href = url
-           link.setAttribute('download', 'file.png') //or any other extension
+      forceFileDownload(response) {
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', 'file.png') //or any other extension
 
-           document.body.appendChild(link)
-           link.click()
+        document.body.appendChild(link)
+        link.click()
       },
       downloadImages() {
         var zip = new this.$JSZip();
@@ -449,25 +481,32 @@
             console.log("requesting thumbnail at: " + endpoint)
           }
           var s = endpoint.split('/')
-          var fileName = s[s.length-1]
-          fetch('http://localhost:30000/proxyget' + endpoint).then((res) => {
+          var fileName = s[s.length - 1]
+          var options = {
+            headers: {
+              'X-Proxy-URL': this.$data.url
+            }
+          }
+          fetch('http://localhost:30000/proxyget' + endpoint, options).then((res) => {
             res.blob().then((content) => {
-              if (idx == (this.$data.renderInferences.length - 1) ) {
-                  console.log("adding " + fileName + " to zip")
-                  var z = zip.file(fileName, content)
-                  setTimeout(()=>{ // TODO, there definitely should be a better option than setTimeout, but jszip chaining isn't working
-                    console.log("z.files")
-                    console.log(z.files)
-                    z.generateAsync({type: "blob"}).then((blob) => {
-                      console.log("downloading zip")
-                      const url = window.URL.createObjectURL(blob) //new Blob([blob]))
-                      const link = document.createElement('a')
-                      link.href = url
-                      link.setAttribute('download', "images.zip") //or any other extension
-                      document.body.appendChild(link)
-                      link.click()
-                    })
-                  },1000);
+              if (idx == (this.$data.renderInferences.length - 1)) {
+                console.log("adding " + fileName + " to zip")
+                var z = zip.file(fileName, content)
+                setTimeout(() => { // TODO, there definitely should be a better option than setTimeout, but jszip chaining isn't working
+                  console.log("z.files")
+                  console.log(z.files)
+                  z.generateAsync({
+                    type: "blob"
+                  }).then((blob) => {
+                    console.log("downloading zip")
+                    const url = window.URL.createObjectURL(blob) //new Blob([blob]))
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.setAttribute('download', "images.zip") //or any other extension
+                    document.body.appendChild(link)
+                    link.click()
+                  })
+                }, 1000);
               } else {
                 console.log("adding " + fileName + " to zip")
                 zip.file(fileName, content)
@@ -506,7 +545,6 @@
         console.log("requesting token")
         console.log(this.$data.input)
         if (this.$data.input.length > 0) {
-          // if
           localStorage.setItem('paiv_url', this.$data.input[0])
           localStorage.setItem('paiv_user', this.$data.input[1])
           localStorage.setItem('paiv_password', this.$data.input[2])
@@ -516,48 +554,59 @@
           this.$data.password = this.$data.input[2]
         }
         var options = {
-          method: "GET"
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            url: this.$data.input[0],
+            username: this.$data.input[1],
+            password: this.$data.input[2]
+          })
         }
         fetch("http://localhost:30000/token", options).then((res) => {
-          console.log("api call complete")
+          console.log("token api request made")
           this.$modal.hide("login-modal")
-          res.text().then( (token) => {
-              console.log("in text promise")
-              this.$data.token = token
-              localStorage.setItem('token', token)
-              console.log(token)
-          }).catch( (err) => {
-            console.log("err")
+          res.text().then((token) => {
+            console.log(`received new token ${token}`)
+            this.$data.token = token
+            localStorage.setItem('token', token)
+            this.getModels()
+            this.getInferences()
+            this.getInferenceDetails()
+            // pull data
+          }).catch((err) => {
+            console.log("err in token api promise")
             console.log(err)
           })
         })
       },
-      inputFile: function (newFile, oldFile) {
-            if (newFile && oldFile && !newFile.active && oldFile.active) {
-              // Get response data
-              console.log('response', newFile.response)
-              if (newFile.xhr) {
-                //  Get the response status code
-                console.log('status', newFile.xhr.status)
-              }
-            }
+      inputFile: function(newFile, oldFile) {
+        if (newFile && oldFile && !newFile.active && oldFile.active) {
+          // Get response data
+          console.log('response', newFile.response)
+          if (newFile.xhr) {
+            //  Get the response status code
+            console.log('status', newFile.xhr.status)
+          }
+        }
       },
-      inputFilter: function (newFile, oldFile, prevent) {
-            if (newFile && !oldFile) {
-              // Filter non-image file
-              if (!/\.(jpeg|jpe|jpg|gif|png|webp)$/i.test(newFile.name)) {
-                return prevent()
-              }
-            }
+      inputFilter: function(newFile, oldFile, prevent) {
+        if (newFile && !oldFile) {
+          // Filter non-image file
+          if (!/\.(jpeg|jpe|jpg|gif|png|webp)$/i.test(newFile.name)) {
+            return prevent()
+          }
+        }
 
-            // Create a blob field
-            newFile.blob = ''
-            let URL = window.URL || window.webkitURL
-            if (URL && URL.createObjectURL) {
-              newFile.blob = URL.createObjectURL(newFile.file)
-            }
+        // Create a blob field
+        newFile.blob = ''
+        let URL = window.URL || window.webkitURL
+        if (URL && URL.createObjectURL) {
+          newFile.blob = URL.createObjectURL(newFile.file)
+        }
       },
-      updateVideo(eventData){
+      updateVideo(eventData) {
         // console.log("eventData")
         var x = eventData.points[0]['x']
         var vid = document.getElementById("videoContainer")
@@ -574,16 +623,18 @@
         var e = document.getElementById("selectedModel");
         var selectedModel = e.options[e.selectedIndex].value
         this.$data.selectedModel = selectedModel //'ee5f1177-7ff1-4cd5-86d2-60faca266c71'
-        this.$data.files.map( (file, f_idx) => {
+        this.$data.files.map((file, f_idx) => {
           var formData = new FormData()
           formData.append('blob', file)
+          formData.append("genCaption", "true")
           var options = {
             method: "POST",
-            body: formData
-            // headers: {
-            //   "X-Auth-Token": this.$data.token,
+            body: formData,
+            headers: {
+              // "X-Auth-Token": this.$data.token,
+              "X-Proxy-URL": this.$data.url
             //   // "Content-Type": "multipart/form-data"
-            // }
+            }
           }
           console.log("formData")
           console.log(formData)
@@ -602,7 +653,7 @@
               console.log(result)
               // this.$data.inferences.append(result)
               // TODO, this only applies in case of a still image
-              var labels = Array.from(new Set(result.classified.map( (c) => c.label )))
+              var labels = Array.from(new Set(result.classified.map((c) => c.label)))
               var endpoint = result.imageUrl.split('/uploads')[1]
               // result.classified.filter((c) =>  )
               this.$data.inferenceDetails[result.imageMd5] = {}
@@ -628,9 +679,9 @@
               console.log(inference)
               this.$data.inferences.push(inference)
               // "http://powerai-vision-ny-service:9080/powerai-vision-ny-api/uploads/temp/ee5f1177-7ff1-4cd5-86d2-60faca266c71/16acd8ad-2008-484b-8f7a-e669621852f3.jpg"
-            }).catch( (err) => {
+            }).catch((err) => {
               console.log("error parsing json")
-            } )
+            })
           }).catch((err) => {
             console.log(err)
           })
@@ -661,21 +712,26 @@
         })
       },
       getInferences() {
-        var options = {
-          method: "GET",
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+        return new Promise((resolve, reject) => {
+          var options = {
+            method: "GET",
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              "X-Proxy-URL": this.$data.url,
+              "X-Auth-Token": this.$data.token
+            }
           }
-        }
-        fetch("http://localhost:30000/inferences", options).then((response) => {
-          response.json().then((json) => {
-            // TODO filter is only here to ignore shared inferences
-            var inf = json //.filter(i => i.model_id != '29dad520-4908-42fc-b118-9971b957bf8c')
-            this.$data.inferences = inf; // json
-            this.$data.renderInferences = inf //.filter(i => i.model_id == '3ac091c7-66ef-450a-8b7d-fa9e0cc748e6 	') // only need to do this initially
-            console.log("inferences received")
-            // localStorage.setItem('inferences', inferences)
+          fetch("http://localhost:30000/inferences", options).then((response) => {
+            response.json().then((json) => {
+              // TODO filter is only here to ignore shared inferences
+              var inf = json //.filter(i => i.model_id != '29dad520-4908-42fc-b118-9971b957bf8c')
+              this.$data.inferences = inf; // json
+              this.$data.renderInferences = inf //.filter(i => i.model_id == '3ac091c7-66ef-450a-8b7d-fa9e0cc748e6 	') // only need to do this initially
+              resolve(inf)
+              console.log("inferences received")
+              // localStorage.setItem('inferences', inferences)
+            })
           })
         })
       },
@@ -687,16 +743,20 @@
             'Content-Type': 'application/json'
           }
         }
-        fetch("http://localhost:30000/inferencedetailed", options).then((response) => {
-          console.log(response)
-          response.json().then((json) => {
-            console.log("inference details received")
-            this.$data.inferenceDetails = json
-          }).catch( (err) => {
-            console.log("failure receiving detailed data")
-            console.log(err)
-          } )
-        })
+        setTimeout(() => {
+          fetch("http://localhost:30000/inferencedetailed", options).then((response) => {
+            console.log(response)
+            response.json().then((json) => {
+              console.log("inference details received")
+              console.log(JSON.stringify(json))
+              this.$data.inferenceDetails = json
+            }).catch((err) => {
+              console.log("failure receiving detailed data")
+              console.log(err)
+            })
+          })
+        }, 2000)
+
       },
       search() {
         var query = this.$data.query
@@ -705,13 +765,13 @@
         // TODO, allow multi search, split by query and
         // console.log("this.$data.inferenceDetails")
         // console.log(this.$data.inferenceDetails)
-        this.$data.inferences.map( (inference) => {
+        this.$data.inferences.map((inference) => {
           // Object.values(inference).map( (v) => {
-              // console.log(JSON.stringify(this.$data.inferenceDetails[inference._id]))
-              if ( JSON.stringify(inference).includes(query) || (this.$data.inferenceDetails[inference._id] && JSON.stringify(this.$data.inferenceDetails[inference._id]).includes(query)) ) {
-              // if (typeof(v) == "object" && v.includes(query)) {
-                a.push(inference)
-              }
+          // console.log(JSON.stringify(this.$data.inferenceDetails[inference._id]))
+          if (JSON.stringify(inference).includes(query) || (this.$data.inferenceDetails[inference._id] && JSON.stringify(this.$data.inferenceDetails[inference._id]).includes(query))) {
+            // if (typeof(v) == "object" && v.includes(query)) {
+            a.push(inference)
+          }
           // })
         })
         this.$data.renderInferences = a
@@ -729,17 +789,18 @@
         // selectedInference
       },
       formatLine(inferenceId) {
+        if (this.$data.inferenceDetails) {
         console.log("generating line graph for " + inferenceId)
         console.log(this.$data.inferenceDetails[inferenceId])
         var detections = this.$data.inferenceDetails[inferenceId]
         var objects = Object.keys(detections)
         var d = []
-        objects.map( (o) => {
-          var x = Array.from(Array(detections[o].length).keys())
+        objects.map((o) => {
+          var x = Array.from(Array(detections[o].length + 1).keys())
           // d['data'].push({
           d.push({
-            x: x,
-            y: detections[o],
+            x: [0].concat(x),
+            y: [0].concat(detections[o]),
             mode: 'lines',
             type: 'scatter',
             name: o
@@ -752,7 +813,7 @@
         console.log("this.$data.lineGraphData")
         console.log(this.$data.lineGraphData)
         // detections.map( (detection) )
-
+        }
         // this.$data.lineGraph =
         // this.$data.circleGraph =
       },
@@ -764,9 +825,12 @@
         var d = {
           values: [],
           labels: [],
-          type:"pie"
+          type: "pie",
+          textinfo: "label+percent",
+          textposition: "outside",
+          automargin: true
         }
-        objects.map( (o) => {
+        objects.map((o) => {
           d['values'].push(detections[o].reduce((a, b) => a + b, 0))
           d['labels'].push(o)
           console.log(d)
@@ -873,11 +937,22 @@
   }
 
   #drop_zone {
-    border: 2px dashed #eaecee ;
-    width:  400px;
+    border: 2px dashed #eaecee;
+    width: 400px;
     height: 300px;
     margin: auto;
   }
+
+  /* select {
+    margin: 50px;
+    padding: 5px 35px 5px 5px;
+    font-size: 16px;
+    border: 1px solid #666666;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  } */
+
 </style>
 
 <style lang="scss" scoped>

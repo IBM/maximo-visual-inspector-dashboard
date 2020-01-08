@@ -7,14 +7,15 @@ When the reader has completed this Code Pattern, they will understand how to bui
 <!-- The intended audience for this Code Pattern is application developers and other stakeholders who wish to utilize the power of Maximo Asset Monitor to quickly and effectively monitor any asset to ensure availability, utilization and efficiency. -->
 
 
-<img src="https://i.imgur.com/2gXjpRU.png">
+<!-- <img src="https://i.imgur.com/2gXjpRU.png"> -->
+![Architecture](images/developer-analytical-dashboards-ai-powerai-flow.png)
 
 
 #  Components
 
 * [PowerAI Vision](https://www.ibm.com/us-en/marketplace/ibm-powerai-vision). This is an image analysis platform that allows you to build and manage computer vision models, upload and annotate images, and deploy apis to analyze images and videos.
 
-Sign up for a trial account of PowerAI vision. [here](https://developer.ibm.com/linuxonpower/deep-learning-powerai/try-powerai/). This link includes options to provision a PowerAI Vision instance either locally on in the cloud.
+Sign up for a trial account of PowerAI vision [here](https://developer.ibm.com/linuxonpower/deep-learning-powerai/try-powerai/). This link includes options to provision a PowerAI Vision instance either locally on in the cloud.
 
 
 
@@ -136,6 +137,15 @@ nvm install v8.9.0
 nvm use 8.9.0
 ```
 
+Also install [ffmpeg](https://www.ffmpeg.org/) using on of the following command, depending on your operating system. ffmpeg enables the app to receive metadata describing the analyzed videos.
+```
+# OS X
+brew install ffmpeg
+
+# Linux
+sudo apt install ffmpeg -y
+```
+
 To run the dashboard locally, we'll need to install a few node libraries which are listed in our `package.json` file.
 - [Vue.js](https://vuejs.org/): Used to simplify the generation of front-end components
 - [Express.js](https://expressjs.org/): Used to provide custom api endpoints
@@ -154,6 +164,8 @@ npm install
 ## 4. Deploy dashboard
 
 After installing the prerequisites, we can start the dashboard application.
+
+<!-- First, enter your PowerAI credentials into a env file at `backend/.env`. This will include a URL, username, and password. -->
 
 Run the following to start the backend
 ```

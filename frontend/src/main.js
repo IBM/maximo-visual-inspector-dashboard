@@ -20,7 +20,7 @@ import VCardElement from 'vue-card-element'
 // Vue.use(Vuetify)
 // Vue.use(vuetify)
 // import Vue from 'vue'
-import { MdButton, MdContent, MdTabs, MdCard, MdField, MdInput, MdTable } from 'vue-material/dist/components'
+import { MdButton, MdContent, MdTabs, MdCard, MdField, MdInput, MdTable, MdRipple } from 'vue-material/dist/components'
 // import {MdSelect, MdOption} from 'vue-material/src/components/MdField/MdSelect'
 // import 'vue-material/src/components/MdField'
 
@@ -44,6 +44,7 @@ Vue.use(MdContent)
 Vue.use(MdCard)
 Vue.use(MdTabs)
 Vue.use(MdField)
+Vue.use(MdRipple)
 Vue.use(MdTable)
 
 Vue.config.productionTip = false

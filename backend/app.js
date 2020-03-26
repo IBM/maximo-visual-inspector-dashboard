@@ -62,11 +62,15 @@ app.use(require("express-form-data").parse())
 // app.use(formData.stream())
 app.use('/proxypost', function(req, res) {
   // console.log(upload)
-  // console.log(req)
+  console.log(req)
+  console.log("received post request")
   console.log("req.headers")
   console.log(req.headers)
-  var url = headers['x-proxy-url']
+  var url = req.headers['x-proxy-url']
+  console.log(`url: ${url}`)
+  // console.log(`req.url: ${req.url}`)
   var paiv_url = url + req.url;
+  console.log(`posting to ${paiv_url}`)
   // console.log(fs.createReadStream(req.files['files']['path']))
   // console.log(req.files)
   var filePath = req.files['blob']['path']
@@ -76,7 +80,8 @@ app.use('/proxypost', function(req, res) {
   console.log("readStream")
   console.log(readStream)
   var formData = {
-    files: readStream
+    files: readStream,
+    containHeatMap: "true"
   }
   // console.log("posting to " + paiv_url)
   // require('request').post({url: paiv_url}).pipe(res)

@@ -19,7 +19,7 @@
     <vue-button type="default" v-on:click="showInvokeModal({'function': 'init_user', 'fields': ['ID'], 'title': 'Create User'})">Create User</vue-button> -->
       <div style="margin-top:10px">
         <vue-button type="default" v-on:click="goHome">Home</vue-button>
-        <vue-button type="default" v-on:click="showModal({'name': 'upload-modal', 'title': 'Upload'})">Upload Image(s)</vue-button>
+        <vue-button type="default" v-on:click="filenames = [] ; showModal({'name': 'upload-modal', 'title': 'Upload'})">Upload Image(s)</vue-button>
         <vue-button type="default" v-on:click="showModal({'name': 'login-modal', 'fields': ['URL', 'Username', 'Password'], 'title': 'Login'})">Login</vue-button>
         <vue-button type="default" v-on:click="downloadImages">Download Image(s)</vue-button>
       </div>
@@ -76,13 +76,19 @@
               </md-card-header>
 
               <md-card-media md-big>
-                <img :src="url + inference['thumbnail_path']">
+                <template v-if="Object.keys(inference).includes('heatmap')">
+                    <img :src="inference['heatmap']">
+                    <img :src="url + inference['thumbnail_path']">
+                </template>
+                <template v-else>
+                    <img :src="url + inference['thumbnail_path']">
+                </template>
               </md-card-media>
 
               <md-card-content>
                 <!-- <template v-if="'processed_frames' in Object.keys(inference)"> -->
-                <div class="md-subhead">{{inference['status']}}</div>
-                <div class="md-subhead">{{inference['percent_complete'].toFixed(2)}} %</div>
+                <div class="md-subhead">Status: {{inference['status']}}</div>
+                <div class="md-subhead">Progress: {{inference['percent_complete'].toFixed(2)}} %</div>
                 <!-- </template> -->
               </md-card-content>
 
@@ -93,8 +99,20 @@
 
 
                 <template v-if="inferenceDetails && (Object.keys(inferenceDetails).length > 0) && inferenceDetails[inference._id]">
-                  <div class="md-subhead">Detected Objects</div>
-                  <div>{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div>
+                  <div class="md-subhead">Detected Objects / Classes</div>
+                  <!-- <div>All: {{inferenceDetails[inference._id]}}</div> -->
+                  <template v-if="inference._id.includes('-')">
+                    <div>{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div>
+                  </template>
+                  <template v-else>
+                    <template v-for="(value, key) in Object.keys(inferenceDetails[inference._id])">
+                      <template v-if="Object.keys(inferenceDetails[inference._id][value]).includes('score')">
+                        {{value}}: {{inferenceDetails[inference._id][value]['score']}}
+                      </template>
+                    </template>
+
+                  </template>
+
                 </template>
                 <!-- <div class="md-subhead">Classes: {{inferencedetailed['created_date']}}</div> -->
 
@@ -627,6 +645,7 @@
           var formData = new FormData()
           formData.append('blob', file)
           formData.append("genCaption", "true")
+          formData.append("containHeatMap", "true")
           var options = {
             method: "POST",
             body: formData,
@@ -638,6 +657,11 @@
           }
           console.log("formData")
           console.log(formData)
+          console.log("this.$data.url")
+          console.log(this.$data.url)
+          console.log("options")
+          console.log(options)
+
           console.log("adding file: " + file.name)
           // console.log('this.$data.url + "/dlapis/" + this.$data.selectedModel')
           // console.log(this.$data.url + "/dlapis/" + this.$data.selectedModel)
@@ -646,34 +670,45 @@
           fetch("http://localhost:30000/proxypost" + "/api/dlapis/" + this.$data.selectedModel, options).then((res) => {
             console.log("api call complete")
             // this.$modal.hide('invoke-modal');
-            // console.log(res.text())
-            console.log(res)
             res.json().then((result) => {
               console.log("json")
               console.log(result)
               // this.$data.inferences.append(result)
               // TODO, this only applies in case of a still image
-              var labels = Array.from(new Set(result.classified.map((c) => c.label)))
+
               var endpoint = result.imageUrl.split('/uploads')[1]
               // result.classified.filter((c) =>  )
               this.$data.inferenceDetails[result.imageMd5] = {}
-              labels.map((l) => {
-                var r = result.classified.filter(c => c.label == l)
-                var count = r.length //Array.from((new Set(r))).length
-                console.log("count for " + l)
-                this.$data.inferenceDetails[result.imageMd5][l] = count
-              })
+              console.log(JSON.stringify(result))
+              if (Object.keys(result).includes('classified')) {
+                // var labels = Array.from(new Set(result.classified.map((c) => c.label)))
+                var labels = Array.from(new Set(Object.keys(result.classified).map((c) => c)))
 
+                labels.map((l) => {
+                  var r = Object.keys(result.classified).filter(c => c.label == l)
+                  var count = r.length //Array.from((new Set(r))).length
+                  console.log("count for " + l)
+                  this.$data.inferenceDetails[result.imageMd5][l] = {"count": count, "score": result.classified[l]}
+                  // this.$data.inferenceDetails[result.imageMd5]['score'] = result.classified[l]
+                })
+                console.log("labels")
+                console.log(labels)
+              }
+
+              if (Object.keys(result).includes('heatmap')) {
+                var heatmap = result['heatmap']
+              } else {
+                var heatmap = ""
+              }
               var inference = {
                 _id: result.imageMd5,
                 created_date: (new Date().toJSON()),
                 thumbnail_path: '/uploads' + endpoint,
                 status: result['result'],
                 model: result['webAPIId'],
+                heatmap: heatmap,
                 percent_complete: 100
               }
-              console.log("labels")
-              console.log(labels)
               // this.$data.inferenceDetails[result.imageMd5] =  //result.classified
               console.log("appending inference ")
               console.log(inference)
@@ -681,6 +716,7 @@
               // "http://powerai-vision-ny-service:9080/powerai-vision-ny-api/uploads/temp/ee5f1177-7ff1-4cd5-86d2-60faca266c71/16acd8ad-2008-484b-8f7a-e669621852f3.jpg"
             }).catch((err) => {
               console.log("error parsing json")
+              console.log(err)
             })
           }).catch((err) => {
             console.log(err)
@@ -796,6 +832,7 @@
         var objects = Object.keys(detections)
         var d = []
         objects.map((o) => {
+          console.log("adding object " + o)
           var x = Array.from(Array(detections[o].length + 1).keys())
           // d['data'].push({
           d.push({
@@ -820,7 +857,7 @@
       formatCircle(inferenceId) {
         console.log(this.$data.inferenceDetails)
         console.log("generating line graph for " + inferenceId)
-        var detections = this.$data.inferenceDetails[inferenceId]
+        var detections = this.$data.inferenceDetails[inferenceId]['count']
         var objects = Object.keys(detections)
         var d = {
           values: [],

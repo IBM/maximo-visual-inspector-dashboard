@@ -28,7 +28,8 @@ import 'vuetify/dist/vuetify.min.css'
 
 import 'vue-material/dist/vue-material.min.css'
 import 'vue-material/dist/theme/default.css'
-// import VueMaterial from 'vue-material'
+
+import VueMaterial from 'vue-material'
 const VueUploadComponent = require('vue-upload-component')
 // Vue.use(VueMaterial)
 import { Plotly } from 'vue-plotly'
@@ -46,6 +47,10 @@ Vue.use(MdTabs)
 Vue.use(MdField)
 Vue.use(MdRipple)
 Vue.use(MdTable)
+
+Vue.use(VueMaterial)
+
+// Vue.use(MdSelect)
 
 Vue.config.productionTip = false
 

@@ -19,9 +19,9 @@
     <vue-button type="default" v-on:click="showInvokeModal({'function': 'init_user', 'fields': ['ID'], 'title': 'Create User'})">Create User</vue-button> -->
       <div style="margin-top:10px">
         <vue-button type="default" v-on:click="goHome">Home</vue-button>
-        <vue-button type="default" v-on:click="filenames = [] ; showModal({'name': 'upload-modal', 'title': 'Upload'})">Upload Image(s)</vue-button>
+        <vue-button type="default" v-on:click="filenames = []  ; files = [] ; showModal({'name': 'upload-modal', 'title': 'Upload'})">Upload Image(s)</vue-button>
         <vue-button type="default" v-on:click="showModal({'name': 'login-modal', 'fields': ['URL', 'Username', 'Password'], 'title': 'Login'})">Login</vue-button>
-        <vue-button type="default" v-on:click="downloadImages">Download Image(s)</vue-button>
+        <vue-button type="default" v-on:click="downloadImages">Export Image(s)</vue-button>
       </div>
 
 
@@ -54,6 +54,7 @@
         <md-field style="width:500px; margin: auto; ">
           <label>Search</label>
           <md-input @keyup.enter="search" v-model="query"></md-input>
+          <md-icon v-on:click="search">search</md-icon>
           <!-- <span class="md-helper-text">Helper text</span> -->
         </md-field>
         <template v-if="inferences.length > 0">
@@ -79,6 +80,8 @@
                 <template v-if="Object.keys(inference).includes('heatmap')">
                     <img :src="inference['heatmap']">
                     <img :src="url + inference['thumbnail_path']">
+                    <!-- <img style="position: absolute; opacity: 0.2" :src="inference['heatmap']"> -->
+                    <!-- <img style="position: absolute" :src="url + inference['thumbnail_path']"> -->
                 </template>
                 <template v-else>
                     <img :src="url + inference['thumbnail_path']">
@@ -87,8 +90,19 @@
 
               <md-card-content>
                 <!-- <template v-if="'processed_frames' in Object.keys(inference)"> -->
-                <div class="md-subhead">Status: {{inference['status']}}</div>
-                <div class="md-subhead">Progress: {{inference['percent_complete'].toFixed(2)}} %</div>
+                Status: <div class="md-subhead">{{inference['status']}}</div>
+                Progress: <div class="md-subhead">{{inference['percent_complete'].toFixed(2)}} %</div>
+
+                Filename:
+                <template v-if="Object.keys(inference).includes('filename')">
+                  <div class="md-subhead">{{inference['filename']}}</div>
+                </template>
+                <template v-else>
+                  <div class="md-subhead">{{inference['video_in'].split('/').slice(-1)[0]}}</div>
+                </template>
+
+
+
                 <!-- </template> -->
               </md-card-content>
 
@@ -99,10 +113,11 @@
 
 
                 <template v-if="inferenceDetails && (Object.keys(inferenceDetails).length > 0) && inferenceDetails[inference._id]">
-                  <div class="md-subhead">Detected Objects / Classes</div>
+                  Detected Objects / Classes
+                  <!-- <div class="md-subhead"></div> -->
                   <!-- <div>All: {{inferenceDetails[inference._id]}}</div> -->
                   <template v-if="inference._id.includes('-')">
-                    <div>{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div>
+                    <div class="md-subhead">{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div>
                   </template>
                   <template v-else>
                     <template v-for="(value, key) in Object.keys(inferenceDetails[inference._id])">
@@ -130,18 +145,34 @@
       </br>
       <div>
         <template v-if="inferences.length > 0">
+          {{inferences[0]}}
           <!-- <md-card
                       color="green"
                       title="Inferences"
                       text="Inferences"
                     > -->
-          <!-- <md-table v-model="inferences">
-                            <md-table-row>
+          <!-- <md-table md-sort-order="asc" md-card md-fixed-header>
+            <md-table-toolbar>
+              <h1 class="md-title">Inferences</h1>
+            </md-table-toolbar>
+            <md-table-row>
+              <template v-for="header in Object.keys(inferences[0])">
+                <md-table-head>{{header}}</md-table-head>
+              </template>
+            </md-table-row>
+            <template v-for="inference in inferences">
+                <md-table-row>
+                  <template v-for="header in Object.keys(inferences[0])">
+                    <md-table-cell>
+                      {{inference[header]}}
+                    </md-table-cell>
+                  </template>
+                </md-table-row>
+            </template>
+          </md-table> -->
 
-                            </md-table-row>
-                    </md-table> -->
-
-          <data-table :data=inferences :items-per-page="5" class="elevation-1">
+          <!-- {{inferences[0]}} -->
+          <data-table :data=inferences :headers="[{ text: '_id', value: '_id' }]" :items-per-page="5">
           </data-table>
 
           <!-- </md-card> -->
@@ -181,7 +212,7 @@
       </modal>
 
       <modal name="upload-modal" height="auto">
-        <h2 align="center"> Upload Files(s) </h2>
+        <h2 align="center" style="margin-top:20px;margin-bottom:20px"> Upload Files(s) </h2>
         <div id="drop_zone" v-on:drop="dropHandler" v-on:dragover="dragOverHandler">
           <p align="center">Drag and drop files here</p>
           <template v-if="filenames.length > 0">
@@ -191,27 +222,32 @@
           </template>
 
           <!-- <v-select v-model="selectedModel" :options="models"></v-select> -->
-          <!-- <md-select v-model="selectedModel" name="selectedModel" id="selectedModel">
-                <template v-for="m in models">
-                  {{m}}
-                  <md-option value=m._id> {{m._id}} {{m._name}} </md-option>
-                </template>
-            </md-select> -->
         </div>
-        <div style="width: 100%; margin: 0 auto;">
+        <div style="width: 100%; margin: 0 auto;margin-top:20px">
           <h3 align="center">Select Model</h3>
-          <div style="width: 100%; margin: 0 auto;">
-            <select id="selectedModel">
+          <div style="width: 80%; margin: 0 auto;">
+
+            <select style="margin-top:10px;margin-bottom:30px" class="select-css" id="selectedModel">
               <template v-for="m in models">
-                <!-- <option value="volvo">Volvo</option> -->
                 <option :value=m._id> {{m.name}} ({{m._id}}) </option>
               </template>
             </select>
+
+            <!-- <md-field style="z-index:1000">
+              <md-select v-model="selectedModel" name="selectedModel" id="selectedModel">
+                  <template v-for="m in models">
+                    <md-option style="z-index:1000" value=m._id> {{m._id}} {{m._name}} </md-option>
+                  </template>
+              </md-select>
+            </md-field> -->
+
           </div>
         </div>
-        <div>
-          <vue-button type="default" v-on:click="hideModal({'name': 'upload-modal'})">Cancel</vue-button>
-          <vue-button type="default" v-on:click="submitInference() ; hideModal({'name': 'upload-modal'})">Upload</vue-button>
+        <div style="width:35%; margin: 0 auto; margin-bottom: 20px">
+          <!-- <div> -->
+            <vue-button type="default" v-on:click="hideModal({'name': 'upload-modal'})">Cancel</vue-button>
+            <vue-button type="success" v-on:click="submitInference() ; hideModal({'name': 'upload-modal'})">Upload</vue-button>
+          <!-- </div> -->
         </div>
       </modal>
 
@@ -539,7 +575,7 @@
         console.log('File(s) dropped');
         // Prevent default behavior (Prevent file from being opened)
         ev.preventDefault();
-        this.$data.filenames = []
+        // this.$data.filenames = []
         if (ev.dataTransfer.items) {
           // Use DataTransferItemList interface to access the file(s)
           for (var i = 0; i < ev.dataTransfer.items.length; i++) {
@@ -700,11 +736,14 @@
               } else {
                 var heatmap = ""
               }
+              // TODO, have to store this locally since pictures are not returned with other inferences
+              var filename = endpoint.split('/').slice(-1)[0]
               var inference = {
                 _id: result.imageMd5,
                 created_date: (new Date().toJSON()),
                 thumbnail_path: '/uploads' + endpoint,
                 status: result['result'],
+                filename: filename,
                 model: result['webAPIId'],
                 heatmap: heatmap,
                 percent_complete: 100
@@ -723,28 +762,8 @@
           })
           if (f_idx == (this.$data.files.length - 1)) {
             this.$data.files = []
+            this.$data.filenames = []
           }
-        })
-      },
-      postInference() {
-        var options = {
-          method: "POST",
-          body: file
-          // headers: {
-          //   'Accept': 'application/json',
-          //   'Content-Type': 'application/json'
-          // }
-        }
-        const input = document.getElementById('fileinput');
-        const file = input.files[0]
-        fetch("http://localhost:30000/inferences", options).then((response) => {
-          response.json().then((json) => {
-            // TODO filter is only here to ignore shared inferences
-            this.$data.inferences = inf; // json
-            this.$data.renderInferences = inf //.filter(i => i.model_id == '3ac091c7-66ef-450a-8b7d-fa9e0cc748e6 	') // only need to do this initially
-            console.log("inferences received")
-            // localStorage.setItem('inferences', inferences)
-          })
         })
       },
       getInferences() {
@@ -795,7 +814,7 @@
 
       },
       search() {
-        var query = this.$data.query
+        var query = this.$data.query.toLowerCase()
         console.log("performing search for: " + query)
         var a = []
         // TODO, allow multi search, split by query and
@@ -804,7 +823,7 @@
         this.$data.inferences.map((inference) => {
           // Object.values(inference).map( (v) => {
           // console.log(JSON.stringify(this.$data.inferenceDetails[inference._id]))
-          if (JSON.stringify(inference).includes(query) || (this.$data.inferenceDetails[inference._id] && JSON.stringify(this.$data.inferenceDetails[inference._id]).includes(query))) {
+          if (JSON.stringify(inference).toLowerCase().includes(query) || (this.$data.inferenceDetails[inference._id] && JSON.stringify(this.$data.inferenceDetails[inference._id]).toLowerCase().includes(query))) {
             // if (typeof(v) == "object" && v.includes(query)) {
             a.push(inference)
           }
@@ -989,6 +1008,45 @@
     -moz-appearance: none;
     appearance: none;
   } */
+
+  /*  */
+  .imageWrapper {
+    position: relative;
+  }
+  .overlayImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+
+  .select-css {
+  	display: block;
+  	font-size: 16px;
+  	font-family: sans-serif;
+  	font-weight: 700;
+  	color: #444;
+  	line-height: 1.3;
+  	padding: .6em 1.4em .5em .8em;
+  	width: 100%;
+  	max-width: 100%;
+  	box-sizing: border-box;
+  	margin: 0;
+  	border: 1px solid #aaa;
+  	box-shadow: 0 1px 0 1px rgba(0,0,0,.04);
+  	border-radius: .5em;
+  	-moz-appearance: none;
+  	-webkit-appearance: none;
+  	appearance: none;
+  	background-color: #fff;
+  	background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'),
+  	  linear-gradient(to bottom, #ffffff 0%,#e5e5e5 100%);
+  	background-repeat: no-repeat, repeat;
+  	background-position: right .7em top 50%, 0 0;
+  	background-size: .65em auto, 100%;
+  }
+
+  @import url("https://fonts.googleapis.com/css?family=Material+Icons");
 
 </style>
 

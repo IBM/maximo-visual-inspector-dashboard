@@ -133,11 +133,16 @@ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+```
+
+
+```
 nvm install v8.9.0
 nvm use 8.9.0
 ```
 
 Also install [ffmpeg](https://www.ffmpeg.org/) using on of the following command, depending on your operating system. ffmpeg enables the app to receive metadata describing the analyzed videos.
+This may take a while (10-15 minutes)
 ```
 # OS X
 brew install ffmpeg
@@ -151,6 +156,10 @@ To run the dashboard locally, we'll need to install a few node libraries which a
 - [Express.js](https://expressjs.org/): Used to provide custom api endpoints
 
 These libraries can be installed by entering the following commands in a terminal.
+
+```
+cd visual_insights_dashboard
+```
 
 ```
 cd backend

@@ -22,11 +22,14 @@
         <vue-button type="default" v-on:click="filenames = []  ; files = [] ; showModal({'name': 'upload-modal', 'title': 'Upload'})">Upload Image(s)</vue-button>
         <vue-button type="default" v-on:click="showModal({'name': 'login-modal', 'fields': ['URL', 'Username', 'Password'], 'title': 'Login'})">Login</vue-button>
         <vue-button type="default" v-on:click="downloadImages">Export Image(s)</vue-button>
+        <vue-button type="default" v-on:click="toggleTables">Toggle Table View</vue-button>
+
       </div>
 
 
     </div>
     </br>
+
 
 
     <!-- <div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);"> -->
@@ -78,8 +81,15 @@
 
               <md-card-media md-big>
                 <template v-if="Object.keys(inference).includes('heatmap')">
-                    <img :src="inference['heatmap']">
-                    <img :src="url + inference['thumbnail_path']">
+                    <canvas v-overlay-image="inference"></canvas>
+                    <!-- <input type="text" v-model="exampleContent" /> -->
+                    <!-- <span>{{ exampleContent }}</span> -->
+
+
+                    <!-- <img :src="inference['heatmap']">
+                    <img :src="url + inference['thumbnail_path']"> -->
+
+
                     <!-- <img style="position: absolute; opacity: 0.2" :src="inference['heatmap']"> -->
                     <!-- <img style="position: absolute" :src="url + inference['thumbnail_path']"> -->
                 </template>
@@ -100,9 +110,6 @@
                 <template v-else>
                   <div class="md-subhead">{{inference['video_in'].split('/').slice(-1)[0]}}</div>
                 </template>
-
-
-
                 <!-- </template> -->
               </md-card-content>
 
@@ -116,17 +123,35 @@
                   Detected Objects / Classes
                   <!-- <div class="md-subhead"></div> -->
                   <!-- <div>All: {{inferenceDetails[inference._id]}}</div> -->
-                  <template v-if="inference._id.includes('-')">
+                  <template v-if="Object.keys(inference).includes('video_in')">
+                    <!-- if video -->
+                    Video
                     <div class="md-subhead">{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div>
                   </template>
-                  <template v-else>
+
+                  <template v-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'object_detection') ">
+                    <template v-for="idx in inference['classified'].length">
+                      <!-- {{idx}} -->
+                      <!-- {{inference['classified'][idx - 1]}} -->
+                      {{inference['classified'][idx - 1]['label']}} {{inference['classified'][idx - 1]['confidence'].toFixed(3)}}
+                    </template>
+                  </template>
+
+                  <template v-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'classification') ">
+                    <template v-for="key in Object.keys(inference['classified'])">
+                      {{key}} {{inference['classified'][key]}}
+                    </template>
+                    <!-- <div class="md-subhead">{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div> -->
+                  </template>
+
+
+                  <!-- <template v-else>
                     <template v-for="(value, key) in Object.keys(inferenceDetails[inference._id])">
                       <template v-if="Object.keys(inferenceDetails[inference._id][value]).includes('score')">
-                        {{value}}: {{inferenceDetails[inference._id][value]['score']}}
+                        {{value}} - {{inferenceDetails[inference._id][value]['score']}}
                       </template>
                     </template>
-
-                  </template>
+                  </template> -->
 
                 </template>
                 <!-- <div class="md-subhead">Classes: {{inferencedetailed['created_date']}}</div> -->
@@ -144,19 +169,81 @@
       </div>
       </br>
       <div>
-        <template v-if="inferences.length > 0">
-          {{inferences[0]}}
+        <template v-if="(inferences.length > 0) && showTables">
+          <div style="margin: 0 auto;width: 100%;">
+            <md-table style="width:1800px" md-sort-order="asc" md-card>
+              <md-table-toolbar>
+                <h1 style="margin: 0 auto; margin-top: 40px">Inferences</h1>
+              </md-table-toolbar>
+              <md-table-row>
+                <template v-for="header in Object.keys(inference_headers)">
+                  <md-table-head style="text-align:center">{{header}}</md-table-head>
+                </template>
+              </md-table-row>
+              <template v-for="inference in inferences">
+              <md-table-row>
+                  <md-table-cell>
+                    <template v-if="Object.keys(inference).includes('video_out')">
+                      {{inference['video_out'].split('/').slice(-1)[0] }}
+                    </template>
+                    <template v-else>
+                      {{inference['filename']}}
+                    </template>
+                  </md-table-cell>
+
+                  <md-table-cell>
+                    <template v-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'object_detection')">
+                      <template v-for="o in inference['classified']">
+                        {{o['confidence']}}
+                      </template>
+                    </template>
+                    <template v-else-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'classification')">
+                        {{Object.values(inference['classified'])}}
+                    </template>
+                  </md-table-cell>
+
+                  <md-table-cell>
+                    <template v-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'object_detection')">
+                      <template v-for="o in inference['classified']">
+                        {{o['label']}}
+                      </template>
+                    </template>
+                    <template v-else-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'classification')">
+                        Object.keys(inference['classified'])
+                    </template>
+                    <template v-else-if="inferenceDetails[inference['_id']]">
+                      {{Object.keys(inferenceDetails[inference['_id']]).join(', ')}}
+                    </template>
+                    <!-- {{inference['score']}} -->
+                  </md-table-cell>
+
+
+                  <md-table-cell>
+                    {{inference['model_id']}}
+                  </md-table-cell>
+              </md-table-row>
+              </template >
+            </md-table>
+          </div>
+        </template>
           <!-- <md-card
                       color="green"
                       title="Inferences"
                       text="Inferences"
                     > -->
-          <!-- <md-table md-sort-order="asc" md-card md-fixed-header>
+
+
+
+
+        <!-- </template> -->
+        <!-- ALL
+        <div>
+          <md-table md-sort-order="asc">
             <md-table-toolbar>
               <h1 class="md-title">Inferences</h1>
             </md-table-toolbar>
             <md-table-row>
-              <template v-for="header in Object.keys(inferences[0])">
+              <template v-for="header in Object.keys(inference_headers)">
                 <md-table-head>{{header}}</md-table-head>
               </template>
             </md-table-row>
@@ -169,20 +256,82 @@
                   </template>
                 </md-table-row>
             </template>
-          </md-table> -->
+          </md-table>
+        </div> -->
 
           <!-- {{inferences[0]}} -->
-          <data-table :data=inferences :headers="[{ text: '_id', value: '_id' }]" :items-per-page="5">
-          </data-table>
+          <!-- <data-table :data=inferences :headers="[{ text: '_id', value: '_id' }]" :items-per-page="5">
+          </data-table> -->
 
           <!-- </md-card> -->
+
+        <template v-if="(models.length > 0) && showTables">
+          <div>
+            <md-table md-sort-order="asc">
+              <md-table-toolbar>
+                <h1 style="margin: 0 auto; margin-top: 40px">Models</h1>
+              </md-table-toolbar>
+              <md-table-row>
+                <!-- <template v-for="header in model_headers">
+                  <md-table-head>{{header}}</md-table-head>
+                </template> -->
+
+                <md-table-head style="text-align:center">Name</md-table-head>
+                <md-table-head style="text-align:center">Dataset</md-table-head>
+                <md-table-head style="text-align:center">ID</md-table-head>
+                <md-table-head style="text-align:center">Categories</md-table-head>
+              </md-table-row>
+              <template v-for="model in models">
+                  <md-table-row>
+                    <!-- <template v-for="header in Object.keys(models[0])">
+                      <md-table-cell>
+                        {{model[header]}}
+                      </md-table-cell>
+                    </template> -->
+                    <md-table-cell>
+                      {{model['name']}}
+                    </md-table-cell>
+                    <md-table-cell>
+                      {{model['dataset_id']}}
+                    </md-table-cell>
+
+                    <md-table-cell>
+                      {{model['_id']}}
+                    </md-table-cell>
+
+                    <md-table-cell>
+                      <template v-for="c in model['categories']">
+                        {{c['category_name']   }}
+                      </template>
+                    </md-table-cell>
+
+
+                  </md-table-row>
+              </template>
+            </md-table>
+            <!-- <md-table md-sort-order="asc" md-card md-fixed-header> -->
+            <!-- <md-table md-sort-order="asc">
+              <md-table-toolbar>
+                <h1 class="md-title">Models</h1>
+              </md-table-toolbar>
+              <md-table-row>
+                <template v-for="header in Object.keys(models[0])">
+                  <md-table-head>{{header}}</md-table-head>
+                </template>
+              </md-table-row>
+              <template v-for="model in models">
+                  <md-table-row>
+                    <template v-for="header in Object.keys(models[0])">
+                      <md-table-cell>
+                        {{model[header]}}
+                      </md-table-cell>
+                    </template>
+                  </md-table-row>
+              </template>
+            </md-table> -->
+          </div>
         </template>
 
-        <template v-if="models.length > 0">
-          <data-table :data=models :style="{overflow: 'auto'}">
-            <!-- <template slot="caption">Models</template> -->
-          </data-table>
-        </template>
 
         <!-- <template v-if="ledgerState.retailers">
                   <data-table :data="ledgerState.retailers.map( s =>  ({ Id: s.Id, Products: s.products }) )" :style="{width: '300px', height: '200px', overflow: 'auto'}">
@@ -390,6 +539,129 @@
     created() {
       zip = new this.JSZip();
     },
+
+    directives: {
+      overlayImage: function(canvasElement, inference) {
+          // Get canvas context
+          console.log("loading overlay")
+          console.log("inference")
+          console.log(inference.value.heatmap)
+
+          var ctx = canvasElement.getContext("2d");
+          var can_w = ctx.canvas.width //= 400
+          var can_h = ctx.canvas.height //= 500
+          // var ch = canvasElement.height /
+          var colors = ['red', 'blue', 'green', 'yellow', 'purple']
+          var heatmap = new Image
+          var i = new Image
+          i.onload = function() {
+              // ctx.drawImage(i, 0,0, 100, 100 * imageObj.height / imageObj.width)
+              // ctx.drawImage(i, 0, 0)
+              console.log("creating thumbnail canvas image")
+              var img_w = this.width
+              var img_h = this.height
+              var can_w = ctx.canvas.width //= 400
+              var can_h = ctx.canvas.height //= 500
+
+              // var hRatio = canvasElement.width / img_w    ;
+              // var vRatio = canvasElement.height / img_h  ;
+              console.log(`img_h ${img_h} img_w ${img_w} can_w ${can_w} can_h ${can_h}`)
+              var vRatio = 1 //can_h / img_h ;
+              var hRatio = 1 //can_w / img_w ;
+
+              ctx.canvas.width = img_w
+              ctx.canvas.height = img_h
+              console.log(`img_h ${img_h} img_w ${img_w} can_w ${ctx.canvas.width} can_h ${ctx.canvas.height}`)
+              var ratio = Math.min ( hRatio, vRatio )
+              console.log('ratio')
+              console.log(ratio)
+              ctx.globalAlpha = 0.8;
+
+              var centerShift_x = 0//( canvasElement.width - hRatio*img_w ) / 2;
+              var centerShift_y = 0//( canvasElement.height - vRatio*img_h ) / 2;
+
+              // var centerShift_x = ( canvasElement.width - img_w*ratio ) / 2;
+              // var centerShift_y = ( canvasElement.height - img_h*ratio ) / 2;
+              // ctx.drawImage(i, 0, 0, img_w, img_h, centerShift_x,centerShift_y,img_w*ratio, img_h*ratio ) //, 100, 100 * imageObj.height / imageObj.width)
+              // ctx.drawImage(i, 0, 0, img_w, img_h, centerShift_x,centerShift_y,img_w*hRatio, img_h*vRatio ) //, 100, 100 * imageObj.height / imageObj.width)
+              ctx.drawImage(i, 0, 0, img_w, img_h)//, centerShift_x,centerShift_y,img_w, img_h ) //, 100, 100 * imageObj.height / imageObj.width)
+
+              // ctx.drawImage(i, 0, 0, img_w, img_h, 0,0,img_w*ratio, img_h*ratio ) //, 100, 100 * imageObj.height / imageObj.width)
+              if (inference.value['analysis_type'] == 'object_detection') {
+                // inference['classified']
+                // "classified":[{"confidence":0.9998242259025574,"ymax":153,"label":"helmet","xmax":236,"xmin":136,"ymin":8},{"confidence":0.7896438241004944,"ymax":492,"label":"safety_vest","xmax":314,"xmin":114,"ymin":143}]
+                console.log("drawing boxes")
+                inference.value['classified'].map( (o, idx) => {
+                  // context.rect(x,y,width,height)
+                  // ctx.rect(20, 20, 150, 100);
+                  // var ratio = 0.5 // 0.7220216606498195
+                  // var y_offset = -150
+
+                  var tl_x = o['xmin'] * hRatio
+                  var tl_y = (o['ymin'] * vRatio)
+
+                  var w = (o['xmax'] - o['xmin']) * hRatio
+                  var h = (o['ymax'] - o['ymin']) * vRatio
+                  ctx.lineWidth = "6";
+                  ctx.strokeStyle = colors[idx % colors.length];
+                  ctx.fillStyle = colors[idx % colors.length];
+                  // ctx.strokeStyle = "blue";
+                  console.log(`xmin ${o['xmin']}, ymax ${o['ymax']}, hRatio ${hRatio} vRatio ${vRatio}`)
+                  console.log(`w ${w}, h ${h}, tl_x ${tl_x}, tl_y ${tl_y} ` )
+                  ctx.beginPath()
+                  ctx.font = "30px Arial";
+                  ctx.fillText(o['label'], o['xmin'] + 20, o['ymin'] + 20)
+                  ctx.rect( tl_x, tl_y, w, h )
+                  // ctx.rect( tl_x + centerShift_x, tl_y + centerShift_y, w, h )
+                  // ctx.rect( tl_x + centerShift_x, tl_y + centerShift_y + y_offset, w, h )
+                  ctx.stroke()
+                })
+              } else {
+                heatmap.onload = function() {
+                    var img_w = this.width
+                    var img_h = this.height
+                    var hRatio = canvasElement.width / img_w    ;
+                    var vRatio = canvasElement.height / img_h  ;
+                    var ratio  = Math.max ( hRatio, vRatio )
+                    ctx.globalAlpha = 0.4;
+                    ctx.drawImage(heatmap, 0, 0, img_w, img_h, 0,0,img_w*ratio, img_h*ratio ) //, 100, 100 * imageObj.height / imageObj.width)
+                    console.log("dims")
+                    console.log(this.width)
+                    console.log(this.height)
+                    // TODO, add text based on class
+                    // canvasElement.width = this.width
+                    // canvasElement.height = this.height
+                }
+                heatmap.style.opacity = 0.1
+                heatmap.style['z-index'] = 100
+                heatmap.src = inference['value']['heatmap']
+              }
+
+
+          }
+          // i.style.opacity = 0.1
+          // console.log("thumbnail")
+          // console.log(inference['value']['url'] + inference['value']['thumbnail_path'])
+
+          i.src = inference['value']['url'] + inference['value']['thumbnail_path']
+
+          console.log(`canvasElement.width ${canvasElement.width} ` )
+          console.log(`canvasElement.height ${canvasElement.height} ` )
+
+
+
+
+
+
+          // ctx.beginPath();
+          // ctx.arc(100, 75, 50, 0, 2 * Math.PI);
+          // ctx.stroke();
+
+
+          // ctx.drawImage(inference['heatmap'], 0, 0)
+      }
+    },
+
     data() {
       return {
         isHidden: false,
@@ -405,11 +677,25 @@
         fields: [],
         query: '',
         token: (localStorage['token'] || ''),
+
+        model_headers: [
+          'name',
+          'dataset_id', // select category_name
+          '_id',
+          'categories'
+        ],
+        inference_headers: {
+          "Filename": "",
+          "Score": "",
+          "Objects": "", //  Object.keys('classified')
+          "Model": "model_id"
+        },
         // user_fields: [],
         // user_type: '',
         // user_input: [],
         input: [],
         func: '',
+        showTables: true,
         title: '',
         selectedInference: '',
         selectedModel: '',
@@ -482,6 +768,9 @@
       },
       selectInference(id){
         return (inferences.filter( (i) => i._id == id))[0]
+      },
+      toggleTables() {
+        this.$data.showTables = ! this.$data.showTables
       },
       getModels() {
         var options = {
@@ -680,8 +969,6 @@
         this.$data.files.map((file, f_idx) => {
           var formData = new FormData()
           formData.append('blob', file)
-          formData.append("genCaption", "true")
-          formData.append("containHeatMap", "true")
           var options = {
             method: "POST",
             body: formData,
@@ -691,14 +978,9 @@
             //   // "Content-Type": "multipart/form-data"
             }
           }
-          console.log("formData")
-          console.log(formData)
-          console.log("this.$data.url")
-          console.log(this.$data.url)
-          console.log("options")
-          console.log(options)
+          console.log("uploading file: " + file.name)
 
-          console.log("adding file: " + file.name)
+
           // console.log('this.$data.url + "/dlapis/" + this.$data.selectedModel')
           // console.log(this.$data.url + "/dlapis/" + this.$data.selectedModel)
           // fetch(this.$data.url + "/dlapis/" + this.$data.selectedModel, options).then((res) => {
@@ -718,17 +1000,35 @@
               console.log(JSON.stringify(result))
               if (Object.keys(result).includes('classified')) {
                 // var labels = Array.from(new Set(result.classified.map((c) => c.label)))
-                var labels = Array.from(new Set(Object.keys(result.classified).map((c) => c)))
 
-                labels.map((l) => {
-                  var r = Object.keys(result.classified).filter(c => c.label == l)
-                  var count = r.length //Array.from((new Set(r))).length
-                  console.log("count for " + l)
-                  this.$data.inferenceDetails[result.imageMd5][l] = {"count": count, "score": result.classified[l]}
-                  // this.$data.inferenceDetails[result.imageMd5]['score'] = result.classified[l]
-                })
-                console.log("labels")
-                console.log(labels)
+                // if classified is "array", we're receiving results of "object detection"
+                if (Array.isArray(result.classified)) {
+                  // object detection
+                  var analysis_type = 'object_detection'
+                } else {
+                  // classification
+                  var analysis_type = 'classification'
+                  /*
+                  var labels = Array.from(new Set(Object.keys(result.classified).map((c) => c)))
+                  labels.map((l) => {
+                    var r = Object.keys(result.classified).filter(c => c.label == l)
+                    var count = r.length //Array.from((new Set(r))).length
+                    console.log("count for " + l)
+                    this.$data.inferenceDetails[result.imageMd5][l] = {"count": count, "score": result.classified[l]}
+                    // this.$data.inferenceDetails[result.imageMd5]['score'] = result.classified[l]
+                  })
+                  console.log("labels")
+                  console.log(labels)
+                  */
+                }
+
+                // object detection
+                // {"webAPIId":"61539587-2c52-47d6-bfb7-a60d6d49bace","imageUrl":"http://vision-v120-prod-service:9080/vision-v120-prod-api/uploads/temp/61539587-2c52-47d6-bfb7-a60d6d49bace/ebd425bc-c675-4161-95e1-ca81bf685957.png","imageMd5":"8cb49157f32d2790dfc46b96abadbce7","classified":[{"confidence":0.9998242259025574,"ymax":153,"label":"helmet","xmax":236,"xmin":136,"ymin":8},{"confidence":0.7896438241004944,"ymax":492,"label":"safety_vest","xmax":314,"xmin":114,"ymin":143}],"result":"success"}
+                // "classified":[{"confidence":0.9998242259025574,"ymax":153,"label":"helmet","xmax":236,"xmin":136,"ymin":8},{"confidence":0.7896438241004944,"ymax":492,"label":"safety_vest","xmax":314,"xmin":114,"ymin":143}]
+
+                // classifier
+                // {"webAPIId":"f1bdbfb5-7a55-402d-9cd4-3d7c16d1d8d4","imageUrl":"http://vision-v120-prod-service:9080/vision-v120-prod-api/uploads/temp/f1bdbfb5-7a55-402d-9cd4-3d7c16d1d8d4/d90d3ed3-8076-4cca-b2b9-b10ba331e9f3.png","imageMd5":"f9c7439db22cf5cea47d24453876cd14","classified":{"Pneumonia-Virus":"79.53754425048828"},"result":"success"}
+                // "classified":{"Pneumonia-Virus":"79.53754425048828"}
               }
 
               if (Object.keys(result).includes('heatmap')) {
@@ -736,17 +1036,24 @@
               } else {
                 var heatmap = ""
               }
-              // TODO, have to store this locally since pictures are not returned with other inferences
+              // TODO, curretly have to store this locally since pictures are not returned with other inferences. Should investigate where these images/metadata are stored, and possibly cache results
               var filename = endpoint.split('/').slice(-1)[0]
+
               var inference = {
                 _id: result.imageMd5,
+                analysis_type: analysis_type, //"image",
                 created_date: (new Date().toJSON()),
                 thumbnail_path: '/uploads' + endpoint,
                 status: result['result'],
                 filename: filename,
-                model: result['webAPIId'],
+                model_id: result['webAPIId'],
                 heatmap: heatmap,
-                percent_complete: 100
+                percent_complete: 100,
+                classified: result['classified'],
+                url: this.$data.url
+
+
+                // objects:
               }
               // this.$data.inferenceDetails[result.imageMd5] =  //result.classified
               console.log("appending inference ")
@@ -1010,14 +1317,7 @@
   } */
 
   /*  */
-  .imageWrapper {
-    position: relative;
-  }
-  .overlayImage {
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
+
 
 
   .select-css {
@@ -1047,6 +1347,28 @@
   }
 
   @import url("https://fonts.googleapis.com/css?family=Material+Icons");
+
+
+table.md-table tbody tr.secondary td[data-title]:before {
+            content: attr(data-title);
+            float: left;
+            font-weight: bold;
+        }
+  table.md-table tr.secondary td.md-cell {
+color: rgba(0, 0, 0, 0.87);
+font-size: 13px;
+border-top: 1px rgba(0, 0, 0, 0.12) solid;
+}
+table.md-table tr.secondary td.md-cell {
+  text-align: right;
+padding: 10px !important;
+}
+
+table.md-table {
+  width: 100%;
+  border-spacing: 0;
+  overflow: hidden;
+}
 
 </style>
 

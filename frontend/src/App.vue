@@ -209,7 +209,7 @@
                       </template>
                     </template>
                     <template v-else-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'classification')">
-                        Object.keys(inference['classified'])
+                        {{Object.keys(inference['classified'])}}
                     </template>
                     <template v-else-if="inferenceDetails[inference['_id']]">
                       {{Object.keys(inferenceDetails[inference['_id']]).join(', ')}}
@@ -425,7 +425,9 @@
         </video>
       </template>
       <template v-else>
-        <img :src="url + (inferences.filter( (i) => i._id == selectedInference))[0]['thumbnail_path']">
+        <!-- <img :src="url + (inferences.filter( (i) => i._id == selectedInference))[0]['thumbnail_path']"> -->
+
+        <canvas v-overlay-image="(inferences.filter( (i) => i._id == selectedInference))[0]"></canvas>
       </template>
 
 
@@ -544,7 +546,9 @@
       overlayImage: function(canvasElement, inference) {
           // Get canvas context
           console.log("loading overlay")
-          console.log("inference")
+          console.log("inference.value")
+          console.log(inference.value)
+          console.log(Object.keys(inference.value))
           console.log(inference.value.heatmap)
 
           var ctx = canvasElement.getContext("2d");
@@ -1045,7 +1049,7 @@
                 created_date: (new Date().toJSON()),
                 thumbnail_path: '/uploads' + endpoint,
                 status: result['result'],
-                filename: filename,
+                filename: file.name, //filename,
                 model_id: result['webAPIId'],
                 heatmap: heatmap,
                 percent_complete: 100,
@@ -1183,6 +1187,9 @@
       formatCircle(inferenceId) {
         console.log(this.$data.inferenceDetails)
         console.log("generating line graph for " + inferenceId)
+        if (! Object.keys(this.$data.inferenceDetails[inferenceId]).includes('count')) {
+          return
+        }
         var detections = this.$data.inferenceDetails[inferenceId]['count']
         var objects = Object.keys(detections)
         var d = {

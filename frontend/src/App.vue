@@ -13,16 +13,16 @@
     <span slot="revealTitle">The revealed title</span>
     <p slot="reveal">The revealed content</p>
   </card> -->
-    <div id="menu">
+    <div style="margin-top:50px" id="menu">
       <!-- <vue-button type="default" v-on:click="showInvokeModal({'function': 'init_product_listing', 'fields': ['Product Listing Id', 'Supplier ID', 'Product ID'], 'title': 'Create Product Listing'})">Create Product Listing</vue-button>
     <vue-button type="default" v-on:click="showInvokeModal({'function': 'init_product', 'fields': ['Product Id', 'Quantity', 'CountryId'], 'title': 'Create Product'})">Create Product</vue-button>
     <vue-button type="default" v-on:click="showInvokeModal({'function': 'init_user', 'fields': ['ID'], 'title': 'Create User'})">Create User</vue-button> -->
-      <div style="margin-top:10px">
+      <div >
         <vue-button type="default" v-on:click="goHome">Home</vue-button>
         <vue-button type="default" v-on:click="filenames = []  ; files = [] ; showModal({'name': 'upload-modal', 'title': 'Upload'})">Upload Image(s)</vue-button>
         <vue-button type="default" v-on:click="showModal({'name': 'login-modal', 'fields': ['URL', 'Username', 'Password'], 'title': 'Login'})">Login</vue-button>
         <vue-button type="default" v-on:click="downloadImages">Export Image(s)</vue-button>
-        <vue-button type="default" v-on:click="toggleTables">Toggle Table View</vue-button>
+        <vue-button type="default" v-on:click="toggleTables">Toggle Tables</vue-button>
 
       </div>
 
@@ -56,7 +56,7 @@
       <div>
         <md-field style="width:500px; margin: auto; ">
           <label>Search</label>
-          <md-input @keyup.enter="search" v-model="query"></md-input>
+          <md-input @keyup.enter="search" @input="search" v-model="query"></md-input>
           <md-icon v-on:click="search">search</md-icon>
           <!-- <span class="md-helper-text">Helper text</span> -->
         </md-field>
@@ -75,13 +75,21 @@
 
               <md-card-header>
                 <md-card-header-text>
-                  <div class="md-title">{{inference._id}}</div>
+                  <!-- <div class="md-title">{{inference._id}}</div> -->
+                  <template v-if="(Object.keys(inference).includes('filename') && inference['filename'].includes('.') )">
+                    <!-- <div class="md-title">{{inference.filename.split('.')[0]}}</div> -->
+                    <div class="md-title">{{inference.filename}}</div>
+                  </template>
+                  <template v-if="Object.keys(inference).includes('video_in') && inference['video_in'].includes('.') && inference['video_in'].includes('/')">
+                    <div class="md-title">{{inference.video_in.split('.')[0].split('/')[4]}}</div>
+
+                  </template>
                 </md-card-header-text>
               </md-card-header>
 
               <md-card-media md-big>
                 <template v-if="Object.keys(inference).includes('heatmap')">
-                    <canvas v-overlay-image="inference"></canvas>
+                    <canvas :id="'image_' + inference['_id']" v-overlay-image="inference"></canvas>
                     <!-- <input type="text" v-model="exampleContent" /> -->
                     <!-- <span>{{ exampleContent }}</span> -->
 
@@ -93,25 +101,30 @@
                     <!-- <img style="position: absolute; opacity: 0.2" :src="inference['heatmap']"> -->
                     <!-- <img style="position: absolute" :src="url + inference['thumbnail_path']"> -->
                 </template>
+
+                <template v-else-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'object_detection')">
+                    <!-- <img :src="url + inference['thumbnail_path']"> -->
+                    <canvas :id="'image_' + inference['_id']" v-overlay-image="inference"></canvas>
+                </template>
+
                 <template v-else>
                     <img :src="url + inference['thumbnail_path']">
                 </template>
               </md-card-media>
 
               <md-card-content>
-                <!-- <template v-if="'processed_frames' in Object.keys(inference)"> -->
-                Status: <div class="md-subhead">{{inference['status']}}</div>
-                Progress: <div class="md-subhead">{{inference['percent_complete'].toFixed(2)}} %</div>
-
-                Filename:
-                <template v-if="Object.keys(inference).includes('filename')">
-                  <div class="md-subhead">{{inference['filename']}}</div>
+                <template v-if="'processed_frames' in Object.keys(inference)">
+                  Status: <div class="md-subhead">{{inference['status']}}</div>
+                  Progress: <div class="md-subhead">{{inference['percent_complete'].toFixed(2)}} %</div>
+                  Filename: <div class="md-subhead">{{inference['video_in'].split('/').slice(-1)[0]}}</div>
                 </template>
-                <template v-else>
-                  <div class="md-subhead">{{inference['video_in'].split('/').slice(-1)[0]}}</div>
+
+                <template v-if="Object.keys(inference).includes('filename')">
+                  <!-- <div class="md-subhead">{{inference['filename']}}</div> -->
                 </template>
                 <!-- </template> -->
               </md-card-content>
+
 
               <md-card-content>
                 <!-- <div class="md-subhead">thumbnail at </div>
@@ -120,12 +133,14 @@
 
 
                 <template v-if="inferenceDetails && (Object.keys(inferenceDetails).length > 0) && inferenceDetails[inference._id]">
-                  Detected Objects / Classes
+                  <div class="md-subhead">Detected Objects / Classes</div>
+
+
                   <!-- <div class="md-subhead"></div> -->
                   <!-- <div>All: {{inferenceDetails[inference._id]}}</div> -->
                   <template v-if="Object.keys(inference).includes('video_in')">
                     <!-- if video -->
-                    Video
+
                     <div class="md-subhead">{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div>
                   </template>
 
@@ -133,13 +148,13 @@
                     <template v-for="idx in inference['classified'].length">
                       <!-- {{idx}} -->
                       <!-- {{inference['classified'][idx - 1]}} -->
-                      {{inference['classified'][idx - 1]['label']}} {{inference['classified'][idx - 1]['confidence'].toFixed(3)}}
+                      {{inference['classified'][idx - 1]['label']}} {{inference['classified'][idx - 1]['confidence'].toFixed(2)}}
                     </template>
                   </template>
 
                   <template v-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'classification') ">
                     <template v-for="key in Object.keys(inference['classified'])">
-                      {{key}} {{inference['classified'][key]}}
+                      {{key}} {{parseFloat(inference['classified'][key]).toFixed(2)}}
                     </template>
                     <!-- <div class="md-subhead">{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div> -->
                   </template>
@@ -170,13 +185,73 @@
       </br>
       <div>
         <template v-if="(inferences.length > 0) && showTables">
-          <div style="margin: 0 auto;width: 100%;">
-            <md-table style="width:1800px" md-sort-order="asc" md-card>
+          <!-- <div style="margin: 0 auto;width: 100%;"> -->
+          <div>
+            <md-card style="width:50%">
+              <h1 style="margin: 0 auto; margin-top: 40px;  ">Inferences</h1>
+              <table style="width:80%;float:center;table-layout:fixed;">
+
+
+            <thead >
+                 <tr>
+                   <template v-for="header in inference_headers">
+                     <th style="text-align:center">{{header}}</th>
+                   </template>
+                 </tr>
+            </thead>
+            <tbody>
+              <template v-for="inference in inferences">
+                <tr >
+                  <td>
+                    <template v-if="Object.keys(inference).includes('video_out')">
+                      {{inference['video_out'].split('/').slice(-1)[0] }}
+                    </template>
+                    <template v-else>
+                      {{inference['filename']}}
+                    </template>
+                  </td>
+
+                  <td>
+                    <template v-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'object_detection')">
+                      <template v-for="o in inference['classified']">
+                        {{o['confidence']}}
+                      </template>
+                    </template>
+                    <template v-else-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'classification')">
+                        {{Object.values(inference['classified'])}}
+                    </template>
+                  </td>
+
+                  <td>
+                    <template v-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'object_detection')">
+                      <template v-for="o in inference['classified']">
+                        {{o['label']}}
+                      </template>
+                    </template>
+                    <template v-else-if="Object.keys(inference).includes('analysis_type') && (inference['analysis_type'] == 'classification')">
+                        {{Object.keys(inference['classified'])}}
+                    </template>
+                    <template v-else-if="inferenceDetails[inference['_id']]">
+                      {{Object.keys(inferenceDetails[inference['_id']]).join(', ')}}
+                    </template>
+                  </td>
+
+                  <td>{{  filterModel(inference['model_id'])  }}</td>
+                  <!-- <td>{{  inference['model_id']  }}</td> -->
+
+                </tr>
+              </template>
+            </tbody>
+            </table>
+            </md-card>
+
+        <!-- <template>
+            <md-table style=" margin: 0 auto; width: 60%;" md-sort-order="asc" card>
               <md-table-toolbar>
                 <h1 style="margin: 0 auto; margin-top: 40px">Inferences</h1>
               </md-table-toolbar>
               <md-table-row>
-                <template v-for="header in Object.keys(inference_headers)">
+                <template v-for="header in inference_headers">
                   <md-table-head style="text-align:center">{{header}}</md-table-head>
                 </template>
               </md-table-row>
@@ -214,16 +289,18 @@
                     <template v-else-if="inferenceDetails[inference['_id']]">
                       {{Object.keys(inferenceDetails[inference['_id']]).join(', ')}}
                     </template>
-                    <!-- {{inference['score']}} -->
                   </md-table-cell>
 
 
                   <md-table-cell>
-                    {{inference['model_id']}}
+                    {{filterModel(inference['model_id'])}}
                   </md-table-cell>
               </md-table-row>
               </template >
             </md-table>
+          </template> -->
+
+
           </div>
         </template>
           <!-- <md-card
@@ -272,18 +349,20 @@
                 <h1 style="margin: 0 auto; margin-top: 40px">Models</h1>
               </md-table-toolbar>
               <md-table-row>
-                <!-- <template v-for="header in model_headers">
-                  <md-table-head>{{header}}</md-table-head>
-                </template> -->
+                <template v-for="header in model_headers">
+                <!-- <template v-for="header in Object.keys(models[0])"> -->
+                  <md-table-head style="text-align:center">{{header}}</md-table-head>
+                </template>
 
-                <md-table-head style="text-align:center">Name</md-table-head>
+                <!-- <md-table-head style="text-align:center">Name</md-table-head>
                 <md-table-head style="text-align:center">Dataset</md-table-head>
                 <md-table-head style="text-align:center">ID</md-table-head>
-                <md-table-head style="text-align:center">Categories</md-table-head>
+                <md-table-head style="text-align:center">Categories</md-table-head> -->
               </md-table-row>
               <template v-for="model in models">
                   <md-table-row>
-                    <!-- <template v-for="header in Object.keys(models[0])">
+                    <!-- <template v-for="header in Object.keys(models[0])"> -->
+                    <!-- <template v-for="header in model_headers">
                       <md-table-cell>
                         {{model[header]}}
                       </md-table-cell>
@@ -292,16 +371,22 @@
                       {{model['name']}}
                     </md-table-cell>
                     <md-table-cell>
-                      {{model['dataset_id']}}
+                      <template v-if="datasets.length > 0">
+                        {{filterDataset(model['dataset_id'])}}
+                      </template>
+                      <template v-else="datasets.length > 0">
+                        {{model['dataset_id']}}
+                      </template>
+
                     </md-table-cell>
 
-                    <md-table-cell>
-                      {{model['_id']}}
-                    </md-table-cell>
+                    <!-- <md-table-cell>
+                      {{filterModel(model['_id'])}}
+                    </md-table-cell> -->
 
                     <md-table-cell>
                       <template v-for="c in model['categories']">
-                        {{c['category_name']   }}
+                        {{c['category_name']}}
                       </template>
                     </md-table-cell>
 
@@ -407,68 +492,131 @@
 
     <template v-if="(selectedInference && (selectedInference.length > 0))">
       <h2> Detailed View </h2>
-      <h3> {{selectedInference}} </h3>
       <!-- <h3> {{inferences}} </h3> -->
       <!-- <h3> {{inferenceDetails}} </h3> -->
       <!-- <p>{{(inferences.filter( (i) => i._id == selectedInference))[0]}}</p> -->
-
       <!-- <source :src="url/uploads/inferences/7afb7810-bdfa-4968-aafc-06a8bd758f5b/training_video_out.mp4" type="video/mp4"> -->
-
       <template v-if="((inferences.filter( (i) => i._id == selectedInference))[0].video_out) && ((inferences.filter( (i) => i._id == selectedInference))[0].percent_complete == 100)">
+
+        <h3> {{(inferences.filter( (i) => i._id == selectedInference))[0].video_out}} </h3>
         <video id="videoContainer" ref="videoContainer" width="960" height="720" controls>
           <source :src="url + (inferences.filter( (i) => i._id == selectedInference))[0].video_out" type="video/mp4">
         </video>
       </template>
       <template v-else-if="(inferences.filter( (i) => i._id == selectedInference))[0].video_in">
+        <h3> {{(inferences.filter( (i) => i._id == selectedInference))[0].video_out}} </h3>
         <video id="videoContainer" ref="videoContainer" width="960" height="720" controls>
           <source :src="url + (inferences.filter( (i) => i._id == selectedInference))[0].video_in " type="video/mp4">
         </video>
       </template>
       <template v-else>
+        <h3> {{(inferences.filter( (i) => i._id == selectedInference))[0].filename}} </h3>
+        <br />
+
         <!-- <img :src="url + (inferences.filter( (i) => i._id == selectedInference))[0]['thumbnail_path']"> -->
 
-        <canvas v-overlay-image="(inferences.filter( (i) => i._id == selectedInference))[0]"></canvas>
+        <!-- <canvas :id="'canvas_' + selectedInference" v-overlay-image="(inferences.filter( (i) => i._id == selectedInference))[0]"></canvas> -->
+        <template v-if="Object.keys(filterInference(selectedInference)).includes('analysis_type') && (filterInference(selectedInference)['analysis_type'] == 'classification') ">
+
+          Adjust Transparency
+          <input ref="opacitySlider" @input="updateTransparency" type="range" min="1" max="80" value="25" class="slider" id="myRange">
+
+          <div style="position: absolute ; height: 700px; width: 100%" :id="'im_container_' + selectedInference" >
+            <div>
+              <img style="position:absolute; left:0; right:0; margin-left: auto; margin-right: auto; height: 500px; width: 700px" :src="url + (inferences.filter( (i) => i._id == selectedInference))[0].thumbnail_path"></img>
+              <img ref="heatmap" id="heatmap" style="position:absolute; left:0; right:0; margin-left: auto; margin-right: auto; opacity: 0.25 ;height: 500px; width: 700px" :src="(inferences.filter( (i) => i._id == selectedInference))[0].heatmap"></img>
+            </div>
+          </div>
+        </template>
+        <template v-else-if="Object.keys(filterInference(selectedInference)).includes('analysis_type') && (filterInference(selectedInference)['analysis_type'] == 'object_detection') ">
+          <div style="position: absolute ; height: 700px; width: 100%" :id="'im_container_' + selectedInference" >
+            <div>
+              <canvas :id="'image_' + inference['_id']" v-overlay-image="filterInference(selectedInference)"></canvas>
+              <!-- <img style="position:absolute; left:0; right:0; margin-left: auto; margin-right: auto; height: 500px; width: 700px" :src="url + (inferences.filter( (i) => i._id == selectedInference))[0].thumbnail_path"></img> -->
+            </div>
+          </div>
+        </template>
       </template>
 
-
-      <md-card style="width:80%">
-        <!-- {{lineGraphData}} -->
-        <Plotly id="detailedLineGraph" ref="detailedLineGraph" v-on:click="updateVideo" :data="lineGraphData" :layout=lineGraphLayout :display-mode-bar="false"></Plotly>
-      </md-card>
+      <div style="position:relative; margin-top: 500px">
 
 
-      <md-card style="width:50%">
-        <!-- <md-card-content> -->
-        <!-- {{circleGraphData}} -->
-        <Plotly id="detailedPieGraph" :data=circleGraphData :display-mode-bar="false"></Plotly>
-        <!-- </md-card-content> -->
-      </md-card>
+        <template v-if="Object.keys((inferences.filter( (i) => i._id == selectedInference))[0]).includes('video_in')">
+          <md-card style="width:80%">
+            <!-- {{lineGraphData}} -->
+            <Plotly id="detailedLineGraph" ref="detailedLineGraph" v-on:click="updateVideo" :data="lineGraphData" :layout=lineGraphLayout :display-mode-bar="false"></Plotly>
+          </md-card>
+          <md-card style="width:50%">
+            <!-- <md-card-content> -->
+            <!-- {{circleGraphData}} -->
+            <Plotly id="detailedPieGraph" :data=circleGraphData :display-mode-bar="false"></Plotly>
+            <!-- </md-card-content> -->
+          </md-card>
+
+        </template>
+
 
       <md-card style="width:35%">
         <md-card-header>
           <md-card-header-text>
-            <div class="md-title">Inference data</div>
+            <div class="md-title">Inference Details</div>
           </md-card-header-text>
         </md-card-header>
         <!-- <md-card-content>
           <div class="md-subhead">Placeholder</div>
         </md-card-content> -->
-        <md-card-content>
 
+
+        <md-card-content>
+          <template v-if="Object.keys(filterInference(selectedInference)).includes('filename')">
+            Filename: <div class="md-subhead">{{filterInference(selectedInference)['filename']}}</div>
+          </template>
+          <template v-else>
+            <div class="md-subhead">{{filterInference(selectedInference)['video_in'].split('/').slice(-1)[0]}}</div>
+          </template>
           <template v-if="inferenceDetails && (Object.keys(inferenceDetails).length > 0) && inferenceDetails[inference._id]">
             <div class="md-subhead">Detected Objects</div>
             <div>{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div>
           </template>
+          <!-- <div class="md-subhead">{{filterInference(selectedInference)['status']}} {{(inferences.filter( (i) => i._id == selectedInference))[0]['percent_complete'].toFixed(2)}} %</div> -->
 
-          <div class="md-subhead">{{(inferences.filter( (i) => i._id == selectedInference))[0]['status']}} {{(inferences.filter( (i) => i._id == selectedInference))[0]['percent_complete'].toFixed(2)}} %</div>
-          <div class="md-subhead">Model: {{(inferences.filter( (i) => i._id == selectedInference))[0]['model_id']}}</div>
-          <div class="md-subhead">{{(inferences.filter( (i) => i._id == selectedInference))[0]['created_date']}}</div>
+          <!-- <div class="md-subhead">Model: {{filterInference(selectedInference)['model_id']}}</div> -->
+          Model:  <div class="md-subhead">{{filterModel(filterInference(selectedInference)['model_id'])}}</div>
+
+
+          Date: <div class="md-subhead">{{filterInference(selectedInference)['created_date']}}</div>
+
+
+          <template v-if="Object.keys(filterInference(selectedInference)).includes('video_in')">
+            Objects
+            <!-- if video -->
+
+            <div class="md-subhead">{{Object.keys(inferenceDetails[filterInference(selectedInference)]['_id']).join(", ")}}</div>
+          </template>
+
+          <template v-if="Object.keys(filterInference(selectedInference)).includes('analysis_type') && (filterInference(selectedInference)['analysis_type'] == 'object_detection') ">
+            Objects
+            <template v-for="idx in filterInference(selectedInference)['classified'].length">
+              <!-- {{idx}} -->
+              <!-- {{inference['classified'][idx - 1]}} -->
+              {{filterInference(selectedInference)['classified'][idx - 1]['label']}} {{filterInference(selectedInference)['classified'][idx - 1]['confidence'].toFixed(3)}}
+            </template>
+          </template>
+
+          <template v-if="Object.keys(filterInference(selectedInference)).includes('analysis_type') && (filterInference(selectedInference)['analysis_type'] == 'classification') ">
+            Classes
+            <template v-for="key in Object.keys(filterInference(selectedInference)['classified'])">
+              <div class="md-subhead">{{key}} {{filterInference(selectedInference)['classified'][key]}}</div>
+            </template>
+            <!-- <div class="md-subhead">{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div> -->
+          </template>
 
           <!-- <div> Object visible in n of x frames </div>
           <div> Object visible in n of x frames </div> -->
         </md-card-content>
 
       </md-card>
+      </div>
     </template>
 
     <!--  TODO, this is being hidden by datatables since it's fixed -->
@@ -543,7 +691,7 @@
     },
 
     directives: {
-      overlayImage: function(canvasElement, inference) {
+      overlayImage: function(canvasElement, inference, opacity=1.0) {
           // Get canvas context
           console.log("loading overlay")
           console.log("inference.value")
@@ -557,7 +705,15 @@
           // var ch = canvasElement.height /
           var colors = ['red', 'blue', 'green', 'yellow', 'purple']
           var heatmap = new Image
+          heatmap.id = "heatmap_" + inference.value['_id'];
+          console.log('heatmap')
+          console.log("heatmap_" + inference.value['_id'])
+          console.log('_id')
+
+          console.log(inference.value['_id'])
           var i = new Image
+          i.id = "image_" + inference.value['_id'];
+
           i.onload = function() {
               // ctx.drawImage(i, 0,0, 100, 100 * imageObj.height / imageObj.width)
               // ctx.drawImage(i, 0, 0)
@@ -683,17 +839,23 @@
         token: (localStorage['token'] || ''),
 
         model_headers: [
-          'name',
-          'dataset_id', // select category_name
-          '_id',
-          'categories'
+          'Name',
+          'Dataset', // select category_name
+          // '_id',
+          'Categories'
         ],
-        inference_headers: {
-          "Filename": "",
-          "Score": "",
-          "Objects": "", //  Object.keys('classified')
-          "Model": "model_id"
-        },
+        inference_headers: [
+          "Filename",
+          "Score",
+          "Objects",
+          "Model"
+        ],
+        // inference_headers: {
+        //   "Filename": "",
+        //   "Score": "",
+        //   "Objects": "", //  Object.keys('classified')
+        //   "Model": "model_id"
+        // },
         // user_fields: [],
         // user_type: '',
         // user_input: [],
@@ -704,6 +866,7 @@
         selectedInference: '',
         selectedModel: '',
         models: [],
+        datasets: [],
         files: [],
         filenames: [],
         inference: {},
@@ -737,6 +900,7 @@
       [Input.name]: Input,
       [Button.name]: Button
     },
+
     beforeMount() {
 
       // this.$data.selectedInference = "foobar"
@@ -756,6 +920,7 @@
       this.getInferenceDetails();
       // this.getInferenceDetails()
       this.getModels()
+      this.getDatasets()
       // TODO, remove this, get env vars working
       // this.$data.url = process.env.VUE_APP_URL,
       // this.$data.username = process.env.VUE_APP_USER,
@@ -770,11 +935,40 @@
         console.log('File(s) in drop zone');
         ev.preventDefault();
       },
-      selectInference(id){
-        return (inferences.filter( (i) => i._id == id))[0]
+      filterInference(id){
+        return (this.$data.inferences.filter( (i) => i._id == id))[0]
       },
+      filterModel(model_id){
+        console.log(`getting name for model id ${model_id}`)
+        return(this.$data.models.filter( (i) => i._id == model_id))[0].name
+      },
+      filterDataset(ds_id){
+        console.log(`getting name for dataset ${ds_id}`)
+        if ((this.$data.datasets.length > 0) && (ds_id.length > 0)) {
+          console.log("parsing datasets")
+          console.log(this.$data.datasets[0])
+          console.log(Object.keys(this.$data.datasets[0]))
+          console.log("name")
+          console.log(this.$data.datasets[0]['name'])
+          return this.$data.datasets.filter( (i) => i._id == ds_id)[0].name
+        } else {
+          console.log("no ds found")
+        }
+      },
+
       toggleTables() {
         this.$data.showTables = ! this.$data.showTables
+      },
+      // updateTransparency(canvasElement, inference, opacity=1.0) {
+      updateTransparency() {
+        console.log("updating image transparency")
+        var heatmap = this.$refs['heatmap']
+        var opacitySlider = this.$refs['opacitySlider']
+        // console.log(opacitySlider)
+        console.log(`heatmap.style.opacity ${heatmap.style.opacity}`)
+        console.log(`opacitySlider.value ${opacitySlider.value}`)
+        heatmap.style.opacity = (opacitySlider.value * .01)
+        // console.log(heatmap.style.opacity)
       },
       getModels() {
         var options = {
@@ -792,15 +986,41 @@
           console.log("models received")
           // console.log(res)
           res.json().then((models) => {
-            this.$data.models = models
+            this.$data.models = models.filter( (m) => m.deployed == '1'  )
             console.log(models)
           })
         })
       },
+
+      getDatasets() {
+        var options = {
+          method: "GET",
+          headers: {
+            "X-Auth-Token": this.$data.token,
+            "X-Proxy-URL": this.$data.url
+          }
+        }
+        console.log("getting datasets")
+        console.log(options)
+        // fetch(this.$data.url + "/trained-models", options).then((res) => {
+        // proxy needed for cors
+        fetch('http://localhost:30000/proxyget' + "/api/datasets", options).then((res) => {
+          console.log("datasets received")
+          // console.log(res)
+          res.json().then((datasets) => {
+            console.log("parsed dataset json")
+            this.$data.datasets = datasets //models.filter( (m) => m.deployed == '1'  )
+          })
+        }).catch( (err) =>  {
+          console.log("error getting datasets")
+          console.log(err)
+        })
+      },
+
       parseDate(d) {
         var dateObj = (new Date(Date.parse(d)))
         // var r = date.getMonth() + date.getDay() + date.getYear()
-        var date = `${dateObj.getMonth()}/${dateObj.getDay()}/${dateObj.getFullYear()}`
+        var date = `${dateObj.getMonth()}/${dateObj.getDate()}/${dateObj.getFullYear()}`
         var time = dateObj.toLocaleString('en-US', {
           hour: 'numeric',
           minute: 'numeric',
@@ -919,6 +1139,7 @@
             this.$data.token = token
             localStorage.setItem('token', token)
             this.getModels()
+            this.getDatasets()
             this.getInferences()
             this.getInferenceDetails()
             // pull data
@@ -1155,60 +1376,63 @@
         // selectedInference
       },
       formatLine(inferenceId) {
-        if (this.$data.inferenceDetails) {
-        console.log("generating line graph for " + inferenceId)
-        console.log(this.$data.inferenceDetails[inferenceId])
-        var detections = this.$data.inferenceDetails[inferenceId]
-        var objects = Object.keys(detections)
-        var d = []
-        objects.map((o) => {
-          console.log("adding object " + o)
-          var x = Array.from(Array(detections[o].length + 1).keys())
-          // d['data'].push({
-          d.push({
-            x: [0].concat(x),
-            y: [0].concat(detections[o]),
-            mode: 'lines',
-            type: 'scatter',
-            name: o
-            // mode:"lines+markers"
+        // console.log("keys")
+        // console.log(Object.keys(this.$data.inferenceDetails[inferenceId])
+        console.log("in formatLine method")
+        console.log(inferenceId)
+        if ( (inferenceId.includes('-')) && (this.$data.inferenceDetails) && (Object.keys(this.$data.inferenceDetails).includes(inferenceId)) ) {
+          console.log("generating line graph for " + inferenceId)
+          console.log(this.$data.inferenceDetails[inferenceId])
+          var detections = this.$data.inferenceDetails[inferenceId]
+          var objects = Object.keys(detections)
+          var d = []
+          objects.map((o) => {
+            console.log("adding object " + o)
+            var x = Array.from(Array(detections[o].length + 1).keys())
+            // d['data'].push({
+            d.push({
+              x: [0].concat(x),
+              y: [0].concat(detections[o]),
+              mode: 'lines',
+              type: 'scatter',
+              name: o
+              // mode:"lines+markers"
+            })
+            console.log(d)
           })
-          console.log(d)
-        })
 
-        this.$data.lineGraphData = d
-        console.log("this.$data.lineGraphData")
-        console.log(this.$data.lineGraphData)
-        // detections.map( (detection) )
+          this.$data.lineGraphData = d
+          console.log("this.$data.lineGraphData")
+          console.log(this.$data.lineGraphData)
+          // detections.map( (detection) )
         }
         // this.$data.lineGraph =
         // this.$data.circleGraph =
       },
       formatCircle(inferenceId) {
-        console.log(this.$data.inferenceDetails)
-        console.log("generating line graph for " + inferenceId)
-        if (! Object.keys(this.$data.inferenceDetails[inferenceId]).includes('count')) {
-          return
-        }
-        var detections = this.$data.inferenceDetails[inferenceId]['count']
-        var objects = Object.keys(detections)
-        var d = {
-          values: [],
-          labels: [],
-          type: "pie",
-          textinfo: "label+percent",
-          textposition: "outside",
-          automargin: true
-        }
-        objects.map((o) => {
-          d['values'].push(detections[o].reduce((a, b) => a + b, 0))
-          d['labels'].push(o)
-          console.log(d)
-        })
+        if ( (inferenceId.includes('-')) &&  Object.keys(this.$data.inferenceDetails[inferenceId]).includes('count')) {
+          console.log("generating circle graph for " + inferenceId)
+          var detections = this.$data.inferenceDetails[inferenceId]['count']
+          var objects = Object.keys(detections)
+          var d = {
+            values: [],
+            labels: [],
+            type: "pie",
+            textinfo: "label+percent",
+            textposition: "outside",
+            automargin: true
+          }
+          objects.map((o) => {
+            d['values'].push(detections[o].reduce((a, b) => a + b, 0))
+            d['labels'].push(o)
+            console.log(d)
+          })
 
-        this.$data.circleGraphData = [d]
-        console.log("this.$data.circleGraphData")
-        console.log(this.$data.circleGraphData)
+          this.$data.circleGraphData = [d]
+          console.log("this.$data.circleGraphData")
+          console.log(this.$data.circleGraphData)
+        }
+
       },
       showInvokeModal(config) {
         console.log("opening modal")
@@ -1356,12 +1580,26 @@
   @import url("https://fonts.googleapis.com/css?family=Material+Icons");
 
 
+  /* table {
+      border-collapse: collapse;
+      width: 100%;
+  }
+
+  tr {
+      border-bottom: 1px solid #ccc;
+  }
+
+  th {
+      text-align: left;
+  } */
+
+
 table.md-table tbody tr.secondary td[data-title]:before {
-            content: attr(data-title);
-            float: left;
-            font-weight: bold;
-        }
-  table.md-table tr.secondary td.md-cell {
+          content: attr(data-title);
+          float: left;
+          font-weight: bold;
+      }
+table.md-table tr.secondary td.md-cell {
 color: rgba(0, 0, 0, 0.87);
 font-size: 13px;
 border-top: 1px rgba(0, 0, 0, 0.12) solid;
@@ -1376,6 +1614,26 @@ table.md-table {
   border-spacing: 0;
   overflow: hidden;
 }
+
+th {
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+
+td {
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+
+
+/* .md-table .md-table-head-text,
+.md-table .md-table-cell .md-table-cell-container {
+  padding-right: 0;
+  padding-left: 0;
+} */
+
 
 </style>
 

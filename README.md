@@ -1,8 +1,8 @@
-# Generate and visualize video analytics using IBM Visual Insights
+# Generate and visualize video analytics using IBM Maximo Visual Inspection
 
-In this Code Pattern we will show how to deploy a customizable dashboard to visualize video/image analytics. This dashboard enables users to upload images to be processed by IBM Visual Insights (object recognition, image classification), download the analyzed results, and view analytics via interactive graphs.
+In this Code Pattern we will show how to deploy a customizable dashboard to visualize video/image analytics. This dashboard enables users to upload images to be processed by IBM Maximo Visual Inspection (object recognition, image classification), download the analyzed results, and view analytics via interactive graphs.
 
-When the reader has completed this Code Pattern, they will understand how to build a dashboard using Vue.js and IBM Visual Insights APIs to generate and visualize image analytics.
+When the reader has completed this Code Pattern, they will understand how to build a dashboard using Vue.js and Maximo Visual Inspection APIs to generate and visualize image analytics.
 
 <!-- The intended audience for this Code Pattern is application developers and other stakeholders who wish to utilize the power of Maximo Asset Monitor to quickly and effectively monitor any asset to ensure availability, utilization and efficiency. -->
 
@@ -13,15 +13,15 @@ When the reader has completed this Code Pattern, they will understand how to bui
 
 #  Components
 
-* [IBM Visual Insights](https://www.ibm.com/us-en/marketplace/ibm-powerai-vision). This is an image analysis platform that allows you to build and manage computer vision models, upload and annotate images, and deploy apis to analyze images and videos.
+* [IBM Maximo Visual Inspection](https://www.ibm.com/us-en/marketplace/ibm-powerai-vision). This is an image analysis platform that allows you to build and manage computer vision models, upload and annotate images, and deploy apis to analyze images and videos.
 
-Sign up for a trial account of IBM Visual Insights [here](https://developer.ibm.com/linuxonpower/deep-learning-powerai/try-powerai/). This link includes options to provision a IBM Visual Insights instance either locally on in the cloud.
+Sign up for a trial account of IBM Maximo Visual Inspection [here](https://developer.ibm.com/linuxonpower/deep-learning-powerai/try-powerai/). This link includes options to provision a IBM Maximo Visual Inspection instance either locally on in the cloud.
 
 
 
 # Flow
 
-1. Upload images to IBM Visual Insights
+1. Upload images to IBM Maximo Visual Inspection
 2. Label uploaded images to train model
 3. Deploy model
 4. Upload image via dashboard
@@ -29,14 +29,14 @@ Sign up for a trial account of IBM Visual Insights [here](https://developer.ibm.
 
 # Prerequisites
 
-* An account on IBM Marketplace that has access to IBM Visual Insights. This service can be provisioned [here](https://developer.ibm.com/linuxonpower/deep-learning-powerai/vision/access-registration-form/)
+* An account on IBM Marketplace that has access to IBM Maximo Visual Inspection. This service can be provisioned [here](https://developer.ibm.com/linuxonpower/deep-learning-powerai/vision/access-registration-form/)
 
 # Steps
 
 Follow these steps to setup and run this Code Pattern.
 
-1. [Upload training images to IBM Visual Insights ](#1-upload-training-images-to-IBM-Visual-Insights)
-2. [Train and deploy model in IBM Visual Insights](#2-Train-and-deploy-model-in-IBM-Visual-Insights)
+1. [Upload training images to IBM Maximo Visual Inspection ](#1-upload-training-images-to-IBM-Visual-Insights)
+2. [Train and deploy model in IBM Maximo Visual Inspection](#2-Train-and-deploy-model-in-IBM-Visual-Insights)
 3. [Clone repository](#3-clone-repository)
 4. [Deploy dashboard](#4-Deploy-dashboard)
 5. [Upload images to be processed via dashboard](#5-Upload-images-to-be-processed-via-dashboard)
@@ -44,9 +44,9 @@ Follow these steps to setup and run this Code Pattern.
 
 <!-- 5. [Create a Dashboard](#4-create-dashboard) -->
 
-## 1. Upload training images to IBM Visual Insights
+## 1. Upload training images to IBM Maximo Visual Inspection
 
-Login to IBM Visual Insights Dashboard
+Login to IBM Maximo Visual Inspection Dashboard
 
 <img src="https://i.imgur.com/66awAad.png">
 
@@ -63,7 +63,7 @@ Drag and drop one or more images to build your dataset.
 <img src="https://i.imgur.com/gugAx7V.png">
 
 
-## 2. Train and deploy model in IBM Visual Insights
+## 2. Train and deploy model in IBM Maximo Visual Inspection
 
 In this example, we'll build an object recognition model to identify specific objects in each frame of a video. After the images have completed uploading to the dataset, select one or more images in the dataset, and then select "Label Objects".
 
@@ -142,7 +142,9 @@ nvm use 8.9.0
 ```
 
 Also install [ffmpeg](https://www.ffmpeg.org/) using on of the following command, depending on your operating system. ffmpeg enables the app to receive metadata describing the analyzed videos.
-This may take a while (10-15 minutes)
+
+This may take a while (10-15 minutes).
+
 ```
 # OS X
 brew install ffmpeg
@@ -195,13 +197,13 @@ Confirm you can access the Dashboard UI at [http://localhost:8080](http://localh
 <img src="https://i.imgur.com/5mKNIOL.png">
 
 
-Click the Login button at the top and enter your IBM Visual Insights credentials. These credentials should be included in the welcome letter when your PowerAI instance provisioned. This input form requires a username, password, and url where the PAIV instance can be accessed.
+Click the Login button at the top and enter your IBM Maximo Visual Inspection credentials. These credentials should be included in the welcome letter when your PowerAI instance provisioned. This input form requires a username, password, and url where the instance can be accessed.
 
 <img src="https://i.imgur.com/ugPunEd.png">
 
 ## 5. Upload images to be processed via dashboard
 
-After providing our IBM Visual Insights credentials, we can then use the dashboard to
+After providing our IBM Maximo Visual Inspection credentials, we can then use the dashboard to
 Let's upload a video or image to be processed by our custom model. We'll do this by clicking the "Upload Image(s)" button in the upper menu. Then, drag and drop images that need to be analyzed. Select a model from the selection dropbox, and then click the "Upload" button.
 
 <img src="https://i.imgur.com/1w8min3.png">
@@ -209,7 +211,7 @@ Let's upload a video or image to be processed by our custom model. We'll do this
 
 ## 6. View processed images and graphs in dashboard
 
-As images are uploaded to the IBM Visual Insights service, they'll be shown in a grid in the main dashboard view. We can use the "Search" input to filter the image analysis results by time, model id, object type, etc. Also, the annotated images can be downloaded as a zip file by clicking the "Download Images" button.
+As images are uploaded to the IBM Maximo Visual Inspection service, they'll be shown in a grid in the main dashboard view. We can use the "Search" input to filter the image analysis results by time, model id, object type, etc. Also, the annotated images can be downloaded as a zip file by clicking the "Download Images" button.
 
 Select any of the images to open a detailed view for a video/image. This detailed view will show the original image/video, as well as a few graphs showing basic video analytics, such as a breakdown of objects detected per second (line graph), and a comparison of total detected objects by type (circle graph).
 

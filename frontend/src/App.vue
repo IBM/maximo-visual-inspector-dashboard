@@ -32,25 +32,6 @@
 
 
 
-    <!-- <div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);"> -->
-
-    <!-- <div>
-      <ul>
-        <li v-for="file in files">{{file.name}} - Error: {{file.error}}, Success: {{file.success}}</li>
-      </ul>
-      <file-upload
-        ref="upload"
-        v-model="files"
-        post-action="/post.method"
-        put-action="/put.method"
-        @input-file="inputFile"
-        @input-filter="inputFilter"
-      >
-      Upload file
-      </file-upload>
-      <button v-show="!$refs.upload || !$refs.upload.active" @click.prevent="$refs.upload.active = true" type="button">Start upload</button>
-      <button v-show="$refs.upload && $refs.upload.active" @click.prevent="$refs.upload.active = false" type="button">Stop upload</button>
-    </div> -->
     <template v-if="( (! selectedInference) || (selectedInference.length < 1))">
       <!-- hacky way to route, hide dashboard view and load detailed view -->
       <div>
@@ -66,7 +47,7 @@
           <template v-for="(inference, idx) in renderInferences">
             <!-- <md-ripple> -->
             <!-- <md-card v-bind:inference="inference._id" v-on:click=setInference > -->
-            <md-card v-bind:inference="inference._id" @click.native="setInference(inference._id) ; formatLine(inference._id) ; formatCircle(inference._id)" md-with-hover>
+            <md-card v-bind:inference="inference._id" @click.native="setInference(inference._id)" md-with-hover>
               <!-- <h3>{{inference.sequence_number}}</h3> -->
               <!-- <md-card-title-text>
                 <md-headline
@@ -77,11 +58,11 @@
                 <md-card-header-text>
                   <!-- <div class="md-title">{{inference._id}}</div> -->
                   <template v-if="(Object.keys(inference).includes('filename') && inference['filename'].includes('.') )">
-                    <!-- <div class="md-title">{{inference.filename.split('.')[0]}}</div> -->
                     <div class="md-title">{{inference.filename}}</div>
                   </template>
                   <template v-if="Object.keys(inference).includes('video_in') && inference['video_in'].includes('.') && inference['video_in'].includes('/')">
-                    <div class="md-title">{{inference.video_in.split('.')[0].split('/')[4]}}</div>
+                    <!-- TODO, readd -->
+                    <!-- <div class="md-title">{{inference.video_in.split('.')[0].split('/')[4]}}</div> -->
 
                   </template>
                 </md-card-header-text>
@@ -116,7 +97,8 @@
                 <template v-if="'processed_frames' in Object.keys(inference)">
                   Status: <div class="md-subhead">{{inference['status']}}</div>
                   Progress: <div class="md-subhead">{{inference['percent_complete'].toFixed(2)}} %</div>
-                  Filename: <div class="md-subhead">{{inference['video_in'].split('/').slice(-1)[0]}}</div>
+                  <!-- TODO, readd -->
+                  <!-- Filename: <div class="md-subhead">{{inference['video_in'].split('/').slice(-1)[0]}}</div> -->
                 </template>
 
                 <template v-if="Object.keys(inference).includes('filename')">
@@ -204,7 +186,8 @@
                 <tr >
                   <td>
                     <template v-if="Object.keys(inference).includes('video_out')">
-                      {{inference['video_out'].split('/').slice(-1)[0] }}
+                      <!-- TODO, readd -->
+                      <!-- {{inference['video_out'].split('/').slice(-1)[0] }} -->
                     </template>
                     <template v-else>
                       {{inference['filename']}}
@@ -491,13 +474,10 @@
     </div>
 
     <template v-if="(selectedInference && (selectedInference.length > 0))">
+      {{inferences.filter( (i) => i._id == selectedInference)[0]._id }}
       <h2> Detailed View </h2>
-      <!-- <h3> {{inferences}} </h3> -->
-      <!-- <h3> {{inferenceDetails}} </h3> -->
-      <!-- <p>{{(inferences.filter( (i) => i._id == selectedInference))[0]}}</p> -->
-      <!-- <source :src="url/uploads/inferences/7afb7810-bdfa-4968-aafc-06a8bd758f5b/training_video_out.mp4" type="video/mp4"> -->
-      <template v-if="((inferences.filter( (i) => i._id == selectedInference))[0].video_out) && ((inferences.filter( (i) => i._id == selectedInference))[0].percent_complete == 100)">
 
+        <template v-if="((inferences.filter( (i) => i._id == selectedInference))[0].video_out) && ((inferences.filter( (i) => i._id == selectedInference))[0].percent_complete == 100)">
         <h3> {{(inferences.filter( (i) => i._id == selectedInference))[0].video_out}} </h3>
         <video id="videoContainer" ref="videoContainer" width="960" height="720" controls>
           <source :src="url + (inferences.filter( (i) => i._id == selectedInference))[0].video_out" type="video/mp4">
@@ -512,10 +492,6 @@
       <template v-else>
         <h3> {{(inferences.filter( (i) => i._id == selectedInference))[0].filename}} </h3>
         <br />
-
-        <!-- <img :src="url + (inferences.filter( (i) => i._id == selectedInference))[0]['thumbnail_path']"> -->
-
-        <!-- <canvas :id="'canvas_' + selectedInference" v-overlay-image="(inferences.filter( (i) => i._id == selectedInference))[0]"></canvas> -->
         <template v-if="Object.keys(filterInference(selectedInference)).includes('analysis_type') && (filterInference(selectedInference)['analysis_type'] == 'classification') ">
 
           Adjust Transparency
@@ -538,17 +514,15 @@
         </template>
       </template>
 
-      <div style="position:relative; margin-top: 500px">
+      <div style="position:relative;">
 
 
         <template v-if="Object.keys((inferences.filter( (i) => i._id == selectedInference))[0]).includes('video_in')">
           <md-card style="width:80%">
-            <!-- {{lineGraphData}} -->
             <Plotly id="detailedLineGraph" ref="detailedLineGraph" v-on:click="updateVideo" :data="lineGraphData" :layout=lineGraphLayout :display-mode-bar="false"></Plotly>
           </md-card>
           <md-card style="width:50%">
             <!-- <md-card-content> -->
-            <!-- {{circleGraphData}} -->
             <Plotly id="detailedPieGraph" :data=circleGraphData :display-mode-bar="false"></Plotly>
             <!-- </md-card-content> -->
           </md-card>
@@ -572,11 +546,12 @@
             Filename: <div class="md-subhead">{{filterInference(selectedInference)['filename']}}</div>
           </template>
           <template v-else>
-            <div class="md-subhead">{{filterInference(selectedInference)['video_in'].split('/').slice(-1)[0]}}</div>
+            <!-- TODO, readd -->
+            <!-- <div class="md-subhead">{{filterInference(selectedInference)['video_in'].split('/').slice(-1)[0]}}</div> -->
           </template>
-          <template v-if="inferenceDetails && (Object.keys(inferenceDetails).length > 0) && inferenceDetails[inference._id]">
+          <template v-if="inferenceDetails && (Object.keys(inferenceDetails).length > 0) && inference && inferenceDetails[selectedInference]">
             <div class="md-subhead">Detected Objects</div>
-            <div>{{Object.keys(inferenceDetails[inference._id]).join(", ")}}</div>
+            <div>{{Object.keys(inferenceDetails[selectedInference]).join(", ")}}</div>
           </template>
           <!-- <div class="md-subhead">{{filterInference(selectedInference)['status']}} {{(inferences.filter( (i) => i._id == selectedInference))[0]['percent_complete'].toFixed(2)}} %</div> -->
 
@@ -591,7 +566,7 @@
             Objects
             <!-- if video -->
 
-            <div class="md-subhead">{{Object.keys(inferenceDetails[filterInference(selectedInference)]['_id']).join(", ")}}</div>
+            <div class="md-subhead">{{Object.keys(inferenceDetails[selectedInference]).join(", ")}}</div>
           </template>
 
           <template v-if="Object.keys(filterInference(selectedInference)).includes('analysis_type') && (filterInference(selectedInference)['analysis_type'] == 'object_detection') ">
@@ -879,10 +854,15 @@
         lineGraphLayout: {
           title: 'Objects Time Series',
           xaxis: {
-            title: 'Seconds',
+            title: 'Num Seconds',
             showgrid: false,
             zeroline: false,
-            tickmode: 'linear'
+            tickmode: 'linear',
+            autotick: true,
+            dtick: '10',
+            nticks: 10,
+            // tickvals: [ 1, 10, 20, 30, 40, 50 ],
+            // ticktext: [ "" ]
           },
           yaxis: {
             title: 'Objects',
@@ -938,9 +918,20 @@
       filterInference(id){
         return (this.$data.inferences.filter( (i) => i._id == id))[0]
       },
+      // filterModel(model_id){
+      //   console.log(`getting name for model id ${model_id}`)
+      //   return(this.$data.models.filter( (i) => i._id == model_id))[0].name
+      // },
       filterModel(model_id){
         console.log(`getting name for model id ${model_id}`)
-        return(this.$data.models.filter( (i) => i._id == model_id))[0].name
+        // console.log(this.$data.models)
+        let models = this.$data.models.filter( (i) => i._id == model_id)
+        if (models.length > 0) {
+          console.log(models)
+          return models[0].name
+        } else {
+          return ""
+        }
       },
       filterDataset(ds_id){
         console.log(`getting name for dataset ${ds_id}`)
@@ -1204,11 +1195,6 @@
             }
           }
           console.log("uploading file: " + file.name)
-
-
-          // console.log('this.$data.url + "/dlapis/" + this.$data.selectedModel')
-          // console.log(this.$data.url + "/dlapis/" + this.$data.selectedModel)
-          // fetch(this.$data.url + "/dlapis/" + this.$data.selectedModel, options).then((res) => {
           console.log("posting to: " + "http://localhost:30000/proxypost" + "/api/dlapis/" + selectedModel)
           fetch("http://localhost:30000/proxypost" + "/api/dlapis/" + this.$data.selectedModel, options).then((res) => {
             console.log("api call complete")
@@ -1315,8 +1301,10 @@
               var inf = json //.filter(i => i.model_id != '29dad520-4908-42fc-b118-9971b957bf8c')
               this.$data.inferences = inf; // json
               this.$data.renderInferences = inf //.filter(i => i.model_id == '3ac091c7-66ef-450a-8b7d-fa9e0cc748e6 	') // only need to do this initially
+
               resolve(inf)
-              console.log("inferences received")
+
+              console.log(`inferences received ${JSON.stringify(inf)}`)
               // localStorage.setItem('inferences', inferences)
             })
           })
@@ -1371,6 +1359,8 @@
         // var inference = event.explicitOriginalTarget.offsetParent.offsetParent.attributes['inference'].nodeValue
         console.log(inferenceId)
         this.$data.selectedInference = inferenceId
+        this.formatLine(inferenceId)
+        this.formatCircle(inferenceId)
         // self.getInferenceDetails()
         // self.formatLine(inferenceId)
         // selectedInference
@@ -1410,9 +1400,10 @@
         // this.$data.circleGraph =
       },
       formatCircle(inferenceId) {
-        if ( (inferenceId.includes('-')) &&  Object.keys(this.$data.inferenceDetails[inferenceId]).includes('count')) {
+
+        if (inferenceId.includes('-')) {
           console.log("generating circle graph for " + inferenceId)
-          var detections = this.$data.inferenceDetails[inferenceId]['count']
+          var detections = this.$data.inferenceDetails[inferenceId]
           var objects = Object.keys(detections)
           var d = {
             values: [],

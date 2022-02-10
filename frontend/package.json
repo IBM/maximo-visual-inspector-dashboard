@@ -11,7 +11,7 @@
     "body-parser": "^1.19.0",
     "chart.js": "^2.9.3",
     "jszip": "^3.2.2",
-    "node-sass": "^4.11.0",
+    "node-sass": "^7.0.0",
     "sass-loader": "^7.1.0",
     "v-data-table": "^2.1.0",
     "vfc": "^1.1.2",

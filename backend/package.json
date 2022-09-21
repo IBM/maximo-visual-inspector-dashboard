@@ -27,7 +27,7 @@
     "nopt": "^4.0.1",
     "underscore": "x.x.x",
     "url": "^0.11.0",
-    "vuetify": "^2.1.10"
+    "vuetify": "^2.6.10"
   },
   "devDependencies": {
     "vue-card": "^1.1.0"

@@ -8,7 +8,7 @@ When the reader has completed this Code Pattern, they will understand how to bui
 
 
 <!-- <img src="https://i.imgur.com/2gXjpRU.png"> -->
-![Architecture](images/developer-analytical-dashboards-ai-powerai-flow.png)
+![Architecture](images/developer-analytical-dashboard-ai-powerai-flow-11.png)
 
 
 #  Components

@@ -1,3 +1,7 @@
+# WARNING: This repository is no longer maintained
+
+> This repository will not be updated. The repository will be kept available in read-only mode.
+
 # Generate and visualize video analytics using IBM Maximo Visual Inspection
 
 In this Code Pattern we will show how to deploy a customizable dashboard to visualize video/image analytics. This dashboard enables users to upload images to be processed by IBM Maximo Visual Inspection (object recognition, image classification), download the analyzed results, and view analytics via interactive graphs.

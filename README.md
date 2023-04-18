@@ -122,7 +122,7 @@ Deploying the custom will establish an endpoint where images and videos can be u
 Clone repository using the git cli
 
 ```
-git clone https://github.com/IBM/power-ai-dashboard
+git clone https://github.com/ansari-akram/powerai_vision_dashboard
 ```
 
 ### Install Node.js packages
